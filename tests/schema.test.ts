@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseExtraction, parseExtractionJson } from "@/lib/schema";
 import validPosting from "./fixtures/valid-posting.json";
-import germanPosting from "./fixtures/german-posting.json";
+import germanPosting from "@/lib/fixtures/german-posting.json";
 
 describe("parseExtraction — LLM boundary contract", () => {
   it("accepts a valid extraction and returns a typed posting", () => {

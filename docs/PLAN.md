@@ -12,8 +12,8 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: all fit scenarios green. Commit: `feat: deterministic fit engine + tests`.
 - [x] **4. Storage** — `src/lib/storage.ts` + unit tests (stubbed Storage). Applications **and profile** (load/save; hardcoded profile = default seed). `src/lib/skill-catalog.ts` (canonical `SKILL_CATALOG`).
       DoD: save/list/update/corrupted-data + profile roundtrip scenarios green. Commit: `feat: localStorage persistence + tests`.
-- [ ] **5. API route** — `src/app/api/extract/route.ts` via ai-sdk; request carries profile skills as normalization hints for the extraction prompt; demo mode (no key → fixture). Integration test with mocked model.
-      DoD: happy + failure shape green; no key never crashes. Commit: `feat: extract API with demo mode`.
+- [x] **5. API route** — `src/app/api/extract/route.ts` via ai-sdk; request carries profile skills as normalization hints; demo mode (no key → fixture); **rate limit 5/h per IP** (`src/lib/rate-limit.ts` + tests); route returns `{ posting }` only (fit is client-side). `.env.local` placeholder + agent read-deny in harness settings.
+      DoD: demo happy + failure shape + 400 + 429 green; no key never crashes. Commit: `feat: extract API with demo mode + rate limit`.
 - [ ] **6. UI: analyze flow** — paste box → analyze → review card (posting fields + fit flags, editable) → save.
       DoD: manual check in dev; no unit tests (rule). Commit: `feat: analyze + review card UI`.
 - [ ] **7. UI: applications list** — saved list, status dropdown, delete.

@@ -12,9 +12,9 @@ deterministic fit analysis against my profile → editable review card → save 
 | 3   | **No database — localStorage behind `src/lib/storage.ts`**                                                                                                                                                                                                   | The AI workflow is the point, not CRUD; recruiter uses the demo with zero setup. Kinous already proves Prisma/Postgres in production         |
 | 4   | React via Next.js App Router                                                                                                                                                                                                                                 | Deepest stack; matches target jobs (React/Next/TS)                                                                                           |
 | 5   | Backend = Next.js route handler only                                                                                                                                                                                                                         | LLM key must stay server-side; separate API would be ceremony                                                                                |
-| 6   | LLM = Anthropic via Vercel AI SDK; **demo mode** falls back to recorded fixtures when no API key                                                                                                                                                             | Deployed demo works without cost or exposed keys                                                                                             |
+| 6   | LLM = Anthropic via Vercel AI SDK; **demo mode** falls back to recorded fixtures when no API key; **rate limit 5 requests/hour per IP** (in-memory, best-effort on serverless)                                                                               | Deployed demo works without cost or exposed keys                                                                                             |
 | 7   | Hosting: Vercel, one deploy                                                                                                                                                                                                                                  | Front+back together, free tier                                                                                                               |
-| 8   | LLM extracts only; **fit verdict is pure TypeScript**                                                                                                                                                                                                        | See DECISIONS.md #1 (same folder) — testability                                                                                              |
+| 8   | LLM extracts only; **fit verdict is pure TypeScript, computed client-side** — the route returns `{ posting }`; the profile never leaves the browser (only skills travel, as prompt hints)                                                                    | See DECISIONS.md #1 (same folder) — testability                                                                                              |
 
 ## Data model
 
@@ -68,7 +68,7 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 
 **`/api/extract` (integration, mocked model):**
 
-- [ ] happy path returns posting+fit; model failure returns handled error shape
+- [x] happy path (demo mode) returns posting; model failure returns handled error shape; invalid body → 400; 6th request in the hour window → 429
 
 **E2E smoke (stretch goal, demo mode):**
 
