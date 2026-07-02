@@ -19,10 +19,14 @@ deterministic fit analysis against my profile → editable review card → save 
 ## Data model
 
 ```ts
-Profile          { skills: string[], languages: Record<string, string>,
-                   seniority: string, location: string, remoteOk: boolean }
+Profile          { skills: string[], languages: Record<string, string>, seniority: string,
+                   location: string, region: string[], remoteOk: boolean }
 JobPosting       { company, role, seniority, mustHaveSkills[], niceToHave[],
-                   languageRequirement, location, remote, salary? }        // LLM output, zod-validated
+                   languageRequirement: { language, level } | null,
+                   location, workMode, salary }                           // LLM output, zod-validated
+// Postings may be in any language (German is common). The extraction contract
+// requires English canonical output (tech names, language levels) — locked by
+// a German-posting fixture in the contract tests.
 FitFlag          { label: string, status: "ok" | "warn" }
 FitResult        { verdict: "good" | "stretch" | "skip", flags: FitFlag[] }  // pure TS
 SavedApplication { id, posting, fit, status, createdAt }
@@ -45,6 +49,7 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 - [ ] malformed JSON → handled failure (no throw leaking to UI)
 - [ ] partial response (missing required field) → handled failure
 - [ ] hallucinated extra fields → stripped
+- [ ] German-language posting fixture → English canonical output (skills, language level)
 
 **`fit.ts` (unit, pure):**
 
