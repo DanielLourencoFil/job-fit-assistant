@@ -12,10 +12,13 @@ Enforced by tooling, not by goodwill. A commit that violates them is blocked.
 |---|---|
 | No `any`, no `@ts-ignore`, no disabled lint rules | `tsconfig strict: true` + ESLint (`no-explicit-any`, `ban-ts-comment` as **errors**) |
 | Small functions, low complexity | ESLint `complexity: 10`, `max-lines-per-function: 60`, `max-lines: 300` |
+| Formatting is mechanical, never discussed | Prettier via lint-staged |
 | Every commit compiles, lints, and passes tests | `pnpm verify` (typecheck + lint + test) in a pre-commit hook |
+| Every push re-verifies on the server | GitHub Actions runs `pnpm verify` — local hooks can be bypassed, **CI cannot** |
 | LLM output never enters the app unvalidated | zod schema at the single LLM boundary; parse failure is a handled path with a test |
 
 `pnpm verify` is the definition of green. Red = stop, fix, only then continue.
+Tests are the agent's iteration harness: the agent runs them and reads the errors in a loop — they define "done".
 
 ## Layer 2 — Judgment rules (procedural, human-reviewed)
 
