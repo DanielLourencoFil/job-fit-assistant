@@ -14,7 +14,7 @@ deterministic fit analysis against my profile → editable review card → save 
 | 5   | Backend = Next.js route handler only                                                             | LLM key must stay server-side; separate API would be ceremony                                                                        |
 | 6   | LLM = Anthropic via Vercel AI SDK; **demo mode** falls back to recorded fixtures when no API key | Deployed demo works without cost or exposed keys                                                                                     |
 | 7   | Hosting: Vercel, one deploy                                                                      | Front+back together, free tier                                                                                                       |
-| 8   | LLM extracts only; **fit verdict is pure TypeScript**                                            | See DECISIONS.md #1 — testability                                                                                                    |
+| 8   | LLM extracts only; **fit verdict is pure TypeScript**                                            | See DECISIONS.md #1 (same folder) — testability                                                                                      |
 
 ## Data model
 

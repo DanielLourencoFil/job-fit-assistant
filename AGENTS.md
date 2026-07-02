@@ -1,3 +1,5 @@
+> Project working rules (binding): see [CLAUDE.md](CLAUDE.md). Plan contract: [docs/PLAN.md](docs/PLAN.md).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

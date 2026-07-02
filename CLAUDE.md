@@ -30,7 +30,7 @@ Written as actions whose execution is visible in the agent's output — not as s
 2. **Reuse check.** Before creating a component/util/type, list what already exists in the target folder and state why none fits. Creation without this check gets rejected in review.
 3. **Minimal diff.** A change touches only the files named in its plan. Unrelated refactors are a separate task.
 4. **One concern per commit.** Conventional messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
-5. **Tests ship with the logic.** Core logic (extraction, fit analysis, parsing) lands in the same commit as its unit tests (Vitest). UI is not unit-tested — deliberate scope decision (see SPEC.md).
+5. **Tests ship with the logic.** Core logic (extraction, fit analysis, parsing) lands in the same commit as its unit tests (Vitest). UI is not unit-tested — deliberate scope decision (see docs/SPEC.md).
 6. **Tests are a ratchet, not an obstacle.** A test may only change when its _requirement_ changes — in a dedicated commit, stated in the plan. Never weaken a test to make it pass.
 
 ## Test rules — what counts as a real test
@@ -51,13 +51,13 @@ Each rule below closes a known AI failure mode (trivial tests that verify nothin
 Pure logic → unit (many). Boundary shape (LLM ↔ schema) → contract via fixtures (few).
 Wired units → integration (1–2). Full flow → one E2E smoke at most — E2E tests wiring, not logic.
 Isolate non-determinism (LLM, network, time) behind a fakeable boundary; test the deterministic core hard.
-The per-feature scenario checklist lives in SPEC.md.
+The per-feature scenario checklist lives in docs/SPEC.md.
 
 ## Audit, comments, docs
 
 - **Post-feature audit runs in a fresh session** — the session that wrote the code cannot audit it (contaminated context). Audit checks: rule compliance, dead code, orphan imports, risks. This project: one final audit before release, committed as `audit:`.
-- **Comments explain _why_, never _what_.** No narration. AI-directed comments only as trap warnings at the exact danger spot (deliberate invariants an agent would be tempted to "fix"), referencing DECISIONS.md. Rare by design.
-- **DECISIONS.md** holds one-line ADRs (date, decision, why). Criterion for documenting anything: _would a fresh AI session need this to avoid a wrong move?_ If no, don't write it.
+- **Comments explain _why_, never _what_.** No narration. AI-directed comments only as trap warnings at the exact danger spot (deliberate invariants an agent would be tempted to "fix"), referencing docs/DECISIONS.md. Rare by design.
+- **docs/DECISIONS.md** holds one-line ADRs (date, decision, why). Criterion for documenting anything: _would a fresh AI session need this to avoid a wrong move?_ If no, don't write it.
 
 ## Rules for the human (not the agent)
 
@@ -69,6 +69,7 @@ The per-feature scenario checklist lives in SPEC.md.
 - `src/lib/` — pure logic, no React imports.
 - `src/components/` — UI.
 - `src/app/` — routes and API handlers.
+- `docs/` — project docs: SPEC (what), PLAN (how, the contract), DECISIONS (one-line ADRs).
 - A new file needs a clear owner-concern.
 
 If any rule conflicts with speed, the rule wins.
