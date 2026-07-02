@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnalyzePanel } from "@/components/analyze-panel";
+import { ApplicationsList } from "@/components/applications-list";
 import { ReviewCard } from "@/components/review-card";
 import { useApplications, useProfile } from "@/components/use-store";
 import type { FitResult, JobPosting } from "@/lib/types";
@@ -47,10 +48,15 @@ export default function Home() {
             />
           )}
         </section>
-        <section className="text-sm text-muted-foreground">
-          {applications.applications.length === 0
-            ? "No saved applications yet — paste a posting on the left."
-            : `${applications.applications.length} saved — list arrives in step 7.`}
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium">
+            My applications ({applications.applications.length})
+          </h2>
+          <ApplicationsList
+            applications={applications.applications}
+            onStatusChange={applications.setStatus}
+            onDelete={applications.remove}
+          />
         </section>
       </div>
     </main>

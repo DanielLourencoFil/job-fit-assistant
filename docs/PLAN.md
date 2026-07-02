@@ -16,7 +16,7 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: demo happy + failure shape + 400 + 429 green; no key never crashes. Commit: `feat: extract API with demo mode + rate limit`.
 - [x] **6. UI: analyze flow** — paste box → analyze → review card (posting fields + fit flags, editable) → save.
       DoD: manual check in dev; no unit tests (rule). Commit: `feat: analyze + review card UI`.
-- [ ] **7. UI: applications list** — saved list, status dropdown, delete.
+- [x] **7. UI: applications list** — saved list, status dropdown, delete.
       DoD: manual check. Commit: `feat: applications list`.
 - [ ] **7b. UI: profile editor** — skills multi-select from `SKILL_CATALOG` + custom-skill input + languages + location/remote; persisted via storage; used by fit + sent to extraction.
       DoD: edited profile changes fit verdicts; persists across reload. Commit: `feat: editable profile`.
