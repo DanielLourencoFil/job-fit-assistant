@@ -8,16 +8,17 @@ Two layers: **machine-enforced gates** (cannot be violated — tooling blocks it
 
 Enforced by tooling, not by goodwill. A commit that violates them is blocked.
 
-| Rule                                              | Enforced by                                                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| No `any`, no `@ts-ignore`, no disabled lint rules | `tsconfig strict: true` + ESLint (`no-explicit-any`, `ban-ts-comment` as **errors**) |
-| Small functions, low complexity                   | ESLint `complexity: 10`, `max-lines-per-function: 60`, `max-lines: 300`              |
-| Formatting is mechanical, never discussed         | Prettier via lint-staged                                                             |
-| Every commit compiles, lints, and passes tests    | `pnpm verify` (typecheck + lint + test) in a pre-commit hook                         |
-| Every push re-verifies on the server              | GitHub Actions runs `pnpm verify` — local hooks can be bypassed, **CI cannot**       |
-| LLM output never enters the app unvalidated       | zod schema at the single LLM boundary; parse failure is a handled path with a test   |
-| Shipped behavior never regresses (ratchet)        | a feature is "done" when a test locks it; refactors must keep all tests green        |
-| No large-scale deletion without explicit intent   | pre-commit deletion guard: > 80 deleted lines blocked unless `ALLOW_BIG_DELETE=1`    |
+| Rule                                              | Enforced by                                                                                                            |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| No `any`, no `@ts-ignore`, no disabled lint rules | `tsconfig strict: true` + ESLint (`no-explicit-any`, `ban-ts-comment` as **errors**)                                   |
+| Small functions, low complexity                   | ESLint `complexity: 10`, `max-lines-per-function: 60`, `max-lines: 300`                                                |
+| Formatting is mechanical, never discussed         | Prettier via lint-staged                                                                                               |
+| Every commit compiles, lints, and passes tests    | `pnpm verify` (typecheck + lint + test) in a pre-commit hook                                                           |
+| Every push re-verifies on the server              | GitHub Actions runs `pnpm verify` — local hooks can be bypassed, **CI cannot**                                         |
+| LLM output never enters the app unvalidated       | zod schema at the single LLM boundary; parse failure is a handled path with a test                                     |
+| Shipped behavior never regresses (ratchet)        | a feature is "done" when a test locks it; refactors must keep all tests green                                          |
+| No large-scale deletion without explicit intent   | pre-commit deletion guard: > 80 deleted lines blocked unless `ALLOW_BIG_DELETE=1`                                      |
+| Commits/pushes require explicit human approval    | Claude Code permission gates (`.claude/settings.json`): `ask` on commit/push, `deny` on `--no-verify` / `--force-push` |
 
 `pnpm verify` is the definition of green. Red = stop, fix, only then continue.
 Tests are the agent's iteration harness: the agent runs them and reads the errors in a loop — they define "done".
