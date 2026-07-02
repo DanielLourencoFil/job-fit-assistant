@@ -53,6 +53,12 @@ Wired units → integration (1–2). Full flow → one E2E smoke at most — E2E
 Isolate non-determinism (LLM, network, time) behind a fakeable boundary; test the deterministic core hard.
 The per-feature scenario checklist lives in SPEC.md.
 
+## Audit, comments, docs
+
+- **Post-feature audit runs in a fresh session** — the session that wrote the code cannot audit it (contaminated context). Audit checks: rule compliance, dead code, orphan imports, risks. This project: one final audit before release, committed as `audit:`.
+- **Comments explain _why_, never _what_.** No narration. AI-directed comments only as trap warnings at the exact danger spot (deliberate invariants an agent would be tempted to "fix"), referencing DECISIONS.md. Rare by design.
+- **DECISIONS.md** holds one-line ADRs (date, decision, why). Criterion for documenting anything: _would a fresh AI session need this to avoid a wrong move?_ If no, don't write it.
+
 ## Rules for the human (not the agent)
 
 - Read the diff. **Never commit code you don't understand.**
