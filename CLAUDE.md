@@ -1,47 +1,42 @@
 # CLAUDE.md — Working Rules
 
-This file is loaded by the AI coding agent (Claude Code) at the start of every session.
-These are not suggestions — they are binding rules for how code gets written in this repo.
+Loaded by the AI coding agent (Claude Code) at the start of every session.
+Two layers: **machine-enforced gates** (cannot be violated — tooling blocks it) and
+**judgment rules** (procedural, verified by the human in review).
 
-## Workflow — every task goes through four phases
+## Layer 1 — Machine-enforced gates (the law)
 
-1. **Plan** — for anything non-trivial: state what will change, which files, and the approach — *before* writing code. No plan, no code.
-2. **Execute** — smallest useful step. One concern per change.
-3. **Verify** — run `pnpm typecheck && pnpm lint && pnpm test` after every change. Never continue on red.
-4. **Review** — the human reads the diff and must understand it before commit. Code the human doesn't understand does not get committed.
+Enforced by tooling, not by goodwill. A commit that violates them is blocked.
 
-## Engineering principles
+| Rule | Enforced by |
+|---|---|
+| No `any`, no `@ts-ignore`, no disabled lint rules | `tsconfig strict: true` + ESLint (`no-explicit-any`, `ban-ts-comment` as **errors**) |
+| Small functions, low complexity | ESLint `complexity: 10`, `max-lines-per-function: 60`, `max-lines: 300` |
+| Every commit compiles, lints, and passes tests | `pnpm verify` (typecheck + lint + test) in a pre-commit hook |
+| LLM output never enters the app unvalidated | zod schema at the single LLM boundary; parse failure is a handled path with a test |
 
-- Single responsibility: small functions, small modules.
-- Reuse before creating: check existing components/utils first. No duplication.
-- Explicit over clever. Boring code is good code.
-- Edit minimally: don't rewrite unrelated code; preserve existing conventions.
+`pnpm verify` is the definition of green. Red = stop, fix, only then continue.
 
-## TypeScript & quality
+## Layer 2 — Judgment rules (procedural, human-reviewed)
 
-- `strict: true`. No `any`, no `@ts-ignore`, no disabled lint rules.
-- All external input — **LLM output included** — is schema-validated (zod) before entering the app.
+Written as actions whose execution is visible in the agent's output — not as style vibes.
 
-## Tests
+1. **Plan before code.** For any non-trivial task the agent first states: what changes, which files, the approach. No plan, no code.
+2. **Reuse check.** Before creating a component/util/type, list what already exists in the target folder and state why none fits. Creation without this check gets rejected in review.
+3. **Minimal diff.** A change touches only the files named in its plan. Unrelated refactors are a separate task.
+4. **One concern per commit.** Conventional messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
+5. **Tests ship with the logic.** Core logic (extraction, fit analysis, parsing) lands in the same commit as its unit tests (Vitest). UI is not unit-tested — deliberate scope decision (see SPEC.md).
 
-- Core logic (extraction, fit analysis, parsing) ships with unit tests (Vitest) **in the same commit** — not later.
-- UI is not unit-tested in this project (deliberate scope decision, see SPEC.md).
+## Rules for the human (not the agent)
+
+- Read the diff. **Never commit code you don't understand.**
+- The agent proposes; you decide. Approval is an act, not a default.
 
 ## Structure
 
 - `src/lib/` — pure logic, no React imports.
-- `src/components/` — UI components.
+- `src/components/` — UI.
 - `src/app/` — routes and API handlers.
-- A new file needs a clear owner-concern. No `utils.ts` dumping ground.
+- A new file needs a clear owner-concern.
 
-## Commits
-
-- Small, atomic, conventional: `feat:`, `fix:`, `test:`, `docs:`, `chore:`.
-- Every commit compiles and passes tests.
-
-## AI rules
-
-- The agent proposes; the human decides.
-- LLM output is untrusted input: validate with a schema, handle the failure path.
-- Never ship code the human doesn't understand.
-- If a rule here conflicts with speed, the rule wins.
+If any rule conflicts with speed, the rule wins.
