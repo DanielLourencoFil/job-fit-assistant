@@ -63,7 +63,8 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 
 **`storage.ts` (unit, storage stub):**
 
-- [ ] save → list returns it; status update persists; corrupted stored JSON → empty list, no crash
+- [x] save → list returns it; status update persists; corrupted stored JSON → empty list, no crash
+- [x] profile roundtrip (edits persist); corrupted/missing profile → seed default
 
 **`/api/extract` (integration, mocked model):**
 

@@ -10,7 +10,7 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: 5 schema scenarios green. Commit: `feat: zod schema for LLM extraction + contract tests`.
 - [x] **3. Fit engine** — `src/lib/fit.ts` + unit tests (all SPEC scenarios incl. boundaries). ✅
       DoD: all fit scenarios green. Commit: `feat: deterministic fit engine + tests`.
-- [ ] **4. Storage** — `src/lib/storage.ts` + unit tests (stubbed Storage). Applications **and profile** (load/save; hardcoded profile = default seed). `src/lib/skill-catalog.ts` (canonical `SKILL_CATALOG`).
+- [x] **4. Storage** — `src/lib/storage.ts` + unit tests (stubbed Storage). Applications **and profile** (load/save; hardcoded profile = default seed). `src/lib/skill-catalog.ts` (canonical `SKILL_CATALOG`).
       DoD: save/list/update/corrupted-data + profile roundtrip scenarios green. Commit: `feat: localStorage persistence + tests`.
 - [ ] **5. API route** — `src/app/api/extract/route.ts` via ai-sdk; request carries profile skills as normalization hints for the extraction prompt; demo mode (no key → fixture). Integration test with mocked model.
       DoD: happy + failure shape green; no key never crashes. Commit: `feat: extract API with demo mode`.
