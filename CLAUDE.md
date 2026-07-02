@@ -16,6 +16,8 @@ Enforced by tooling, not by goodwill. A commit that violates them is blocked.
 | Every commit compiles, lints, and passes tests | `pnpm verify` (typecheck + lint + test) in a pre-commit hook |
 | Every push re-verifies on the server | GitHub Actions runs `pnpm verify` — local hooks can be bypassed, **CI cannot** |
 | LLM output never enters the app unvalidated | zod schema at the single LLM boundary; parse failure is a handled path with a test |
+| Shipped behavior never regresses (ratchet) | a feature is "done" when a test locks it; refactors must keep all tests green |
+| No large-scale deletion without explicit intent | pre-commit deletion guard: > 80 deleted lines blocked unless `ALLOW_BIG_DELETE=1` |
 
 `pnpm verify` is the definition of green. Red = stop, fix, only then continue.
 Tests are the agent's iteration harness: the agent runs them and reads the errors in a loop — they define "done".
@@ -29,6 +31,7 @@ Written as actions whose execution is visible in the agent's output — not as s
 3. **Minimal diff.** A change touches only the files named in its plan. Unrelated refactors are a separate task.
 4. **One concern per commit.** Conventional messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
 5. **Tests ship with the logic.** Core logic (extraction, fit analysis, parsing) lands in the same commit as its unit tests (Vitest). UI is not unit-tested — deliberate scope decision (see SPEC.md).
+6. **Tests are a ratchet, not an obstacle.** A test may only change when its *requirement* changes — in a dedicated commit, stated in the plan. Never weaken a test to make it pass.
 
 ## Rules for the human (not the agent)
 
