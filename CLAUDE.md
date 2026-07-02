@@ -47,6 +47,12 @@ Each rule below closes a known AI failure mode (trivial tests that verify nothin
 5. LLM responses in tests are recorded fixtures (`tests/fixtures/`): one valid, one malformed, one partial. No live API calls in tests.
 6. **No coverage % target — deliberately.** Coverage measures execution, not verification, and % targets incentivize exactly the trivial tests this section bans. Scenario checklists replace it.
 
+**Which test type, when:** test at the lowest level that can catch the bug.
+Pure logic → unit (many). Boundary shape (LLM ↔ schema) → contract via fixtures (few).
+Wired units → integration (1–2). Full flow → one E2E smoke at most — E2E tests wiring, not logic.
+Isolate non-determinism (LLM, network, time) behind a fakeable boundary; test the deterministic core hard.
+The per-feature scenario checklist lives in SPEC.md.
+
 ## Rules for the human (not the agent)
 
 - Read the diff. **Never commit code you don't understand.**
