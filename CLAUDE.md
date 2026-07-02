@@ -33,6 +33,20 @@ Written as actions whose execution is visible in the agent's output — not as s
 5. **Tests ship with the logic.** Core logic (extraction, fit analysis, parsing) lands in the same commit as its unit tests (Vitest). UI is not unit-tested — deliberate scope decision (see SPEC.md).
 6. **Tests are a ratchet, not an obstacle.** A test may only change when its *requirement* changes — in a dedicated commit, stated in the plan. Never weaken a test to make it pass.
 
+## Test rules — what counts as a real test
+
+Architecture for testability: the LLM does **extraction only**, isolated behind zod.
+Fit judgment is pure, deterministic TypeScript — testable without mocks.
+
+Each rule below closes a known AI failure mode (trivial tests that verify nothing):
+
+1. Every test must answer: **would it fail if the logic broke?** A test that can't fail is rejected in review.
+2. Assert concrete values. Truthiness (`toBeDefined`) is never the sole assertion.
+3. Minimum per unit: happy path + at least one unhappy path + boundary case where relevant.
+4. Test behavior through the public API — never implementation details, never the mock itself.
+5. LLM responses in tests are recorded fixtures (`tests/fixtures/`): one valid, one malformed, one partial. No live API calls in tests.
+6. **No coverage % target — deliberately.** Coverage measures execution, not verification, and % targets incentivize exactly the trivial tests this section bans. Scenario checklists replace it.
+
 ## Rules for the human (not the agent)
 
 - Read the diff. **Never commit code you don't understand.**
