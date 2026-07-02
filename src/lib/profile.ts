@@ -29,6 +29,7 @@ export const profile: Profile = {
   seniority:
     "career-changer with a production SaaS (junior/mid; senior-only is a stretch)",
   location: "Nürnberg, Germany",
-  region: ["Nürnberg", "Fürth", "Erlangen"],
+  // "Nuremberg" included because extraction outputs English canonical names.
+  region: ["Nürnberg", "Nuremberg", "Fürth", "Erlangen"],
   remoteOk: true,
 };

@@ -53,13 +53,13 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 
 **`fit.ts` (unit, pure):**
 
-- [ ] all skills match, no warns → `good`
-- [ ] missing must-have skill → warn flag with skill name
-- [ ] German C1 required vs B2 profile → warn
-- [ ] seniority senior-only → warn
-- [ ] relocation required → warn, not eliminatory
-- [ ] 1–2 warns → `stretch`; 3+ → `skip` (boundary: exactly 2 and exactly 3)
-- [ ] salary absent → no flag, no error
+- [x] all skills match, no warns → `good`
+- [x] missing must-have skill → warn flag with skill name
+- [x] German C1 required vs B2 profile → warn
+- [x] seniority senior-only → warn
+- [x] relocation required → warn, not eliminatory
+- [x] 1–2 warns → `stretch`; 3+ → `skip` (boundary: exactly 2 and exactly 3)
+- [x] salary absent → no flag, no error
 
 **`storage.ts` (unit, storage stub):**
 
