@@ -14,7 +14,7 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: save/list/update/corrupted-data + profile roundtrip scenarios green. Commit: `feat: localStorage persistence + tests`.
 - [x] **5. API route** — `src/app/api/extract/route.ts` via ai-sdk; request carries profile skills as normalization hints; demo mode (no key → fixture); **rate limit 5/h per IP** (`src/lib/rate-limit.ts` + tests); route returns `{ posting }` only (fit is client-side). `.env.local` placeholder + agent read-deny in harness settings.
       DoD: demo happy + failure shape + 400 + 429 green; no key never crashes. Commit: `feat: extract API with demo mode + rate limit`.
-- [ ] **6. UI: analyze flow** — paste box → analyze → review card (posting fields + fit flags, editable) → save.
+- [x] **6. UI: analyze flow** — paste box → analyze → review card (posting fields + fit flags, editable) → save.
       DoD: manual check in dev; no unit tests (rule). Commit: `feat: analyze + review card UI`.
 - [ ] **7. UI: applications list** — saved list, status dropdown, delete.
       DoD: manual check. Commit: `feat: applications list`.

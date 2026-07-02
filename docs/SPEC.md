@@ -74,6 +74,26 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 
 - [ ] paste → analyze → card renders → save → appears in list
 
+## UI plan (approved)
+
+One page, two columns (stacked on mobile). shadcn/ui on Tailwind.
+
+- **Header:** title + "My Profile" button (opens ProfileDialog — step 7b).
+- **Left — AnalyzePanel:** textarea, "Load example", "Analyze" (loading state);
+  errors from the route (400/429/502) render as friendly inline messages;
+  discreet banner when the response is demo mode.
+- **Left — ReviewCard (after analyze):** editable fields (strings as inputs,
+  skills as comma lists, workMode/level as selects); **every edit re-runs
+  analyzeFit live**; verdict badge (good 🟢 / stretch 🟡 / skip 🔴); Save/Discard.
+- **Right — ApplicationsList:** rows with verdict badge, company — role,
+  status select (saved/applied/waiting/interview/offer/rejected), delete;
+  empty state pointing at the left panel.
+- **Fit is a snapshot at save time** — editing the profile later does not
+  rewrite saved verdicts; new analyses use the new profile (DECISIONS #11).
+- Components live in `src/components/`; state via two small hooks
+  (applications, profile) backed by `storage.ts`; localStorage touched only
+  after mount (SSR-safe).
+
 ## Out of scope (deliberate)
 
 Auth, database, multi-user, photo/PDF input, drag-and-drop kanban, i18n, mobile polish.
