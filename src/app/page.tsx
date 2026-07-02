@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnalyzePanel } from "@/components/analyze-panel";
 import { ApplicationsList } from "@/components/applications-list";
+import { ProfileDialog } from "@/components/profile-dialog";
 import { ReviewCard } from "@/components/review-card";
 import { useApplications, useProfile } from "@/components/use-store";
 import type { FitResult, JobPosting } from "@/lib/types";
@@ -13,7 +14,7 @@ interface Draft {
 }
 
 export default function Home() {
-  const { profile } = useProfile();
+  const { profile, saveProfile } = useProfile();
   const applications = useApplications();
   const [draft, setDraft] = useState<Draft | null>(null);
 
@@ -26,6 +27,7 @@ export default function Home() {
     <main className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Job-Fit Assistant</h1>
+        <ProfileDialog profile={profile} onSave={saveProfile} />
       </header>
       <div className="grid gap-6 md:grid-cols-2">
         <section className="space-y-4">

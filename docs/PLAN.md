@@ -18,7 +18,7 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: manual check in dev; no unit tests (rule). Commit: `feat: analyze + review card UI`.
 - [x] **7. UI: applications list** — saved list, status dropdown, delete.
       DoD: manual check. Commit: `feat: applications list`.
-- [ ] **7b. UI: profile editor** — skills multi-select from `SKILL_CATALOG` + custom-skill input + languages + location/remote; persisted via storage; used by fit + sent to extraction.
+- [x] **7b. UI: profile editor** — skills multi-select from `SKILL_CATALOG` + custom-skill input + languages + location/remote; persisted via storage; used by fit + sent to extraction.
       DoD: edited profile changes fit verdicts; persists across reload. Commit: `feat: editable profile`.
 - [ ] **8. States & errors** — loading, empty, parse-failure message surfaced to user.
       DoD: demo-mode failure fixture renders friendly error. Commit: `feat: loading/empty/error states`.
