@@ -1,0 +1,11 @@
+# Deletion guard (CLAUDE.md): block large deletions without explicit intent.
+# Lockfile excluded — dependency changes are not "achievements".
+deleted=$(git diff --cached --numstat -- ':!pnpm-lock.yaml' | awk '{ del += $2 } END { print del+0 }')
+if [ "$deleted" -gt 80 ] && [ "$ALLOW_BIG_DELETE" != "1" ]; then
+  echo "✖ Deletion guard: $deleted lines staged for deletion (limit: 80)."
+  echo "  If this is intentional: ALLOW_BIG_DELETE=1 git commit ..."
+  exit 1
+fi
+
+pnpm exec lint-staged
+pnpm verify
