@@ -23,16 +23,6 @@ describe("parseExtraction — LLM boundary contract", () => {
     expect(result.posting.workMode).toBe("hybrid");
   });
 
-  it("rejects a partial extraction (missing required role) without throwing", () => {
-    const { role: _dropped, ...partial } = validPosting;
-
-    const result = parseExtraction(partial);
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toContain("role");
-  });
-
   it("strips hallucinated fields the schema does not know", () => {
     const withHallucinations = {
       ...validPosting,
@@ -46,19 +36,6 @@ describe("parseExtraction — LLM boundary contract", () => {
     if (!result.ok) return;
     expect(result.posting).not.toHaveProperty("applyUrl");
     expect(result.posting).not.toHaveProperty("recruiterMood");
-  });
-
-  it("rejects an invalid language level instead of letting it into the app", () => {
-    const badLevel = {
-      ...validPosting,
-      languageRequirement: { language: "german", level: "B2+" },
-    };
-
-    const result = parseExtraction(badLevel);
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toContain("languageRequirement.level");
   });
 
   it("German posting extracts to English canonical vocabulary (recorded fixture)", () => {
@@ -75,6 +52,32 @@ describe("parseExtraction — LLM boundary contract", () => {
       language: "german",
       level: "C1",
     });
+  });
+});
+
+describe("parseExtraction — rejections at the boundary", () => {
+  it("rejects a partial extraction (missing required role) without throwing", () => {
+    const partial: Record<string, unknown> = { ...validPosting };
+    delete partial.role;
+
+    const result = parseExtraction(partial);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toContain("role");
+  });
+
+  it("rejects an invalid language level instead of letting it into the app", () => {
+    const badLevel = {
+      ...validPosting,
+      languageRequirement: { language: "german", level: "B2+" },
+    };
+
+    const result = parseExtraction(badLevel);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toContain("languageRequirement.level");
   });
 });
 
