@@ -6,7 +6,7 @@ Deviations from this plan require updating this file first (plan is the contract
 
 - [x] **1. Types + profile seed** — `src/lib/types.ts`, `src/lib/profile.ts`. ✅ 6802d02
       DoD: types compile; profile seed reviewed by the human. Commit: `feat: core types + profile seed`.
-- [ ] **2. LLM boundary schema** — `src/lib/schema.ts` + `tests/fixtures/` (valid, malformed, partial, German) + contract tests.
+- [x] **2. LLM boundary schema** — `src/lib/schema.ts` + `tests/fixtures/` (valid, malformed, partial, German) + contract tests. ✅
       DoD: 5 schema scenarios green. Commit: `feat: zod schema for LLM extraction + contract tests`.
 - [ ] **3. Fit engine** — `src/lib/fit.ts` + unit tests (all SPEC scenarios incl. boundaries).
       DoD: all fit scenarios green. Commit: `feat: deterministic fit engine + tests`.

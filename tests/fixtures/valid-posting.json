@@ -1,0 +1,11 @@
+{
+  "company": "Ingentis",
+  "role": "Frontend Developer",
+  "seniority": null,
+  "mustHaveSkills": ["Vue", "TypeScript", "Clean Code"],
+  "niceToHave": ["Agentic coding", "UI/UX awareness"],
+  "languageRequirement": { "language": "english", "level": "fluent" },
+  "location": "Nürnberg, Germany",
+  "workMode": "hybrid",
+  "salary": null
+}

@@ -45,11 +45,11 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 
 **`schema.ts` (contract, fixtures):**
 
-- [ ] valid LLM response → typed `JobPosting`
-- [ ] malformed JSON → handled failure (no throw leaking to UI)
-- [ ] partial response (missing required field) → handled failure
-- [ ] hallucinated extra fields → stripped
-- [ ] German-language posting fixture → English canonical output (skills, language level)
+- [x] valid LLM response → typed `JobPosting`
+- [x] malformed JSON → handled failure (no throw leaking to UI)
+- [x] partial response (missing required field) → handled failure
+- [x] hallucinated extra fields → stripped
+- [x] German-language posting fixture → English canonical output (skills, language level)
 
 **`fit.ts` (unit, pure):**
 
