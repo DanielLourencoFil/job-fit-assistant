@@ -21,11 +21,9 @@ export const profile: Profile = {
     "AI-assisted development",
   ],
   keySkills: ["TypeScript", "React", "Next.js", "Node.js", "Claude Code"],
+  // Only English seeded by default — add the languages you speak in the profile UI.
   languages: {
-    german: "B2",
     english: "fluent",
-    portuguese: "native",
-    spanish: "fluent",
   },
   seniority:
     "career-changer with a production SaaS (junior/mid; senior-only is a stretch)",

@@ -19,28 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LanguagesSection } from "@/components/profile-languages";
 import { SKILL_CATALOG } from "@/lib/skill-catalog";
-import type { LanguageLevel, Profile, Relocation } from "@/lib/types";
-
-const LEVELS: LanguageLevel[] = [
-  "A1",
-  "A2",
-  "B1",
-  "B2",
-  "C1",
-  "C2",
-  "fluent",
-  "native",
-];
-// Fixed list covering the European job market; other stored languages are preserved.
-const EDITABLE_LANGUAGES = [
-  "german",
-  "english",
-  "spanish",
-  "portuguese",
-  "french",
-  "italian",
-] as const;
+import type { Profile, Relocation } from "@/lib/types";
 
 interface ProfileDialogProps {
   profile: Profile;
@@ -175,42 +156,6 @@ function SkillChip({
     >
       {starred ? `★ ${skill}` : skill}
     </button>
-  );
-}
-
-function LanguagesSection({ draft, setDraft }: SectionProps) {
-  const setLevel = (language: string, level: string) =>
-    setDraft((prev) => {
-      const languages = { ...prev.languages };
-      if (level === "none") delete languages[language];
-      else languages[language] = level as LanguageLevel;
-      return { ...prev, languages };
-    });
-  return (
-    <section className="space-y-2">
-      <Label>Languages</Label>
-      {EDITABLE_LANGUAGES.map((language) => (
-        <div key={language} className="flex items-center justify-between gap-2">
-          <span className="text-sm capitalize">{language}</span>
-          <Select
-            value={draft.languages[language] ?? "none"}
-            onValueChange={(level) => setLevel(language, level ?? "none")}
-          >
-            <SelectTrigger className="h-8 w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">none</SelectItem>
-              {LEVELS.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      ))}
-    </section>
   );
 }
 
