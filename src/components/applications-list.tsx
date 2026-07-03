@@ -1,12 +1,18 @@
 "use client";
 
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import { useState } from "react";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   ApplicationDetails,
   type DetailsHandlers,
 } from "@/components/application-details";
 import { Button } from "@/components/ui/button";
+import { paginate } from "@/lib/paginate";
 import {
   Select,
   SelectContent,
@@ -27,6 +33,14 @@ const STATUSES: ApplicationStatus[] = [
   "rejected",
 ];
 
+const PAGE_SIZE = 5;
+
+/** Newest analysis first — createdAt, not last activity, so cards don't jump
+ * when a status changes (docs/DECISIONS.md #12). */
+function byNewest(a: SavedApplication, b: SavedApplication): number {
+  return b.createdAt.localeCompare(a.createdAt);
+}
+
 interface ApplicationsListProps {
   applications: SavedApplication[];
   onStatusChange: (id: string, status: ApplicationStatus) => void;
@@ -40,6 +54,17 @@ export function ApplicationsList({
   onDelete,
   handlersFor,
 }: ApplicationsListProps) {
+  const [requestedPage, setRequestedPage] = useState(1);
+  const sorted = useMemo(
+    () => [...applications].sort(byNewest),
+    [applications],
+  );
+  const { items, page, totalPages } = paginate(
+    sorted,
+    requestedPage,
+    PAGE_SIZE,
+  );
+
   if (applications.length === 0) {
     return (
       <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
@@ -48,17 +73,59 @@ export function ApplicationsList({
     );
   }
   return (
-    <ul className="space-y-3">
-      {applications.map((application) => (
-        <ApplicationRow
-          key={application.id}
-          application={application}
-          onStatusChange={onStatusChange}
-          onDelete={onDelete}
-          handlers={handlersFor(application.id)}
-        />
-      ))}
-    </ul>
+    <div className="space-y-3">
+      <ul className="space-y-3">
+        {items.map((application) => (
+          <ApplicationRow
+            key={application.id}
+            application={application}
+            onStatusChange={onStatusChange}
+            onDelete={onDelete}
+            handlers={handlersFor(application.id)}
+          />
+        ))}
+      </ul>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setRequestedPage}
+      />
+    </div>
+  );
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        <ChevronLeftIcon /> Prev
+      </Button>
+      <span className="text-xs text-muted-foreground">
+        Page {page} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Next <ChevronRightIcon />
+      </Button>
+    </div>
   );
 }
 

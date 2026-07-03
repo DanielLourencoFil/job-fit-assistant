@@ -15,7 +15,7 @@ Built as a focused showcase: not of feature breadth, but of how a single AI-powe
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)
-![Tests](https://img.shields.io/badge/tests-46%20passing-3fb950?logo=vitest)
+![Tests](https://img.shields.io/badge/tests-52%20passing-3fb950?logo=vitest)
 
 > **Try it with zero setup.** The live deploy runs in **demo mode** — no API key, no login. Paste any posting (German ones work; extraction returns English canonical output) or hit _Load example_.
 
@@ -92,7 +92,7 @@ Every one of those rules is pinned by a hand-computed test anchor (e.g. _"stacke
 | Validation  | **Zod 4** — the one and only LLM↔app boundary                               |
 | UI          | **Tailwind CSS 4** · shadcn/ui · Base UI · Lucide · next-themes (dark mode) |
 | Persistence | **localStorage** behind a `storage.ts` seam (no DB by design)               |
-| Testing     | **Vitest** — 46 tests, fixtures over live calls                             |
+| Testing     | **Vitest** — 52 tests, fixtures over live calls                             |
 | Tooling     | Prettier · ESLint (complexity gates) · Husky · lint-staged · GitHub Actions |
 | Hosting     | **Vercel** — front + back in one deploy                                     |
 
@@ -120,10 +120,11 @@ tests/fit.test.ts        15  scoring anchors: full match → 100, stacked gaps �
 tests/storage.test.ts    13  save/list/status roundtrip, corrupted JSON → empty (no crash)
 tests/schema.test.ts      7  valid / malformed / partial / hallucinated / German→English canonical
 tests/api-extract.test.ts 5  demo happy path, model failure shape, 400 invalid body, 429 rate limit
+tests/paginate.test.ts    6  slicing, boundaries, out-of-range page clamps to last/first
 tests/rate-limit.test.ts  3  sliding-window limiter
 tests/dates.test.ts       3  formatting helpers
                          ──
-                         46  all green in CI
+                         52  all green in CI
 ```
 
 LLM responses in tests are **recorded fixtures** — one valid, one malformed, one partial. No live API calls in the test suite.
