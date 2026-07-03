@@ -1,5 +1,6 @@
 "use client";
 
+import { ExternalLinkIcon } from "lucide-react";
 import { useState } from "react";
 import { FlagList } from "@/components/flag-list";
 import { Button } from "@/components/ui/button";
@@ -45,18 +46,53 @@ export function ApplicationDetails({
   handlers: DetailsHandlers;
 }) {
   return (
-    <div className="space-y-3 border-t pt-3">
-      <DetailsFields application={application} handlers={handlers} />
-      <Timeline application={application} handlers={handlers} />
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">
-          Analysis at save time
-        </p>
+    <div className="space-y-4 rounded-md border bg-muted/20 p-3">
+      <Section title="Source & contact">
+        <DetailsFields application={application} handlers={handlers} />
+      </Section>
+      <Section title="Timeline">
+        <Timeline application={application} handlers={handlers} />
+      </Section>
+      <Section title="Analysis at save time">
         <p className="text-xs text-muted-foreground">
           {metaLine(application.posting)}
         </p>
         <FlagList fit={application.fit} />
-      </div>
+      </Section>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2 border-t pt-3 first:border-t-0 first:pt-0">
+      <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`space-y-1 ${className ?? ""}`}>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      {children}
     </div>
   );
 }
@@ -68,42 +104,56 @@ function DetailsFields({
   application: SavedApplication;
   handlers: DetailsHandlers;
 }) {
+  const { url, contact } = application;
   return (
     <div className="grid grid-cols-2 gap-2">
-      <Input
-        className="col-span-2 h-8"
-        defaultValue={application.url ?? ""}
-        placeholder="Posting URL…"
-        onBlur={(event) =>
-          handlers.onUpdateDetails({ url: event.target.value || undefined })
-        }
-      />
-      <Input
-        className="h-8"
-        defaultValue={application.contact?.name ?? ""}
-        placeholder="Contact name…"
-        onBlur={(event) =>
-          handlers.onUpdateDetails({
-            contact: {
-              name: event.target.value,
-              via: application.contact?.via ?? "",
-            },
-          })
-        }
-      />
-      <Input
-        className="h-8"
-        defaultValue={application.contact?.via ?? ""}
-        placeholder="Via (e.g. LinkedIn InMail)…"
-        onBlur={(event) =>
-          handlers.onUpdateDetails({
-            contact: {
-              name: application.contact?.name ?? "",
-              via: event.target.value,
-            },
-          })
-        }
-      />
+      <Field label="Posting URL" className="col-span-2">
+        <div className="flex items-center gap-1">
+          <Input
+            className="h-8 text-xs"
+            defaultValue={url ?? ""}
+            placeholder="https://…"
+            onBlur={(event) =>
+              handlers.onUpdateDetails({ url: event.target.value || undefined })
+            }
+          />
+          {url?.startsWith("http") && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label="Open posting"
+              onClick={() => window.open(url, "_blank", "noopener")}
+            >
+              <ExternalLinkIcon className="size-3.5" />
+            </Button>
+          )}
+        </div>
+      </Field>
+      <Field label="Contact">
+        <Input
+          className="h-8 text-xs"
+          defaultValue={contact?.name ?? ""}
+          placeholder="Name…"
+          onBlur={(event) =>
+            handlers.onUpdateDetails({
+              contact: { name: event.target.value, via: contact?.via ?? "" },
+            })
+          }
+        />
+      </Field>
+      <Field label="Via">
+        <Input
+          className="h-8 text-xs"
+          defaultValue={contact?.via ?? ""}
+          placeholder="e.g. LinkedIn InMail…"
+          onBlur={(event) =>
+            handlers.onUpdateDetails({
+              contact: { name: contact?.name ?? "", via: event.target.value },
+            })
+          }
+        />
+      </Field>
     </div>
   );
 }
@@ -115,12 +165,14 @@ function Timeline({
   application: SavedApplication;
   handlers: DetailsHandlers;
 }) {
+  const lastIndex = application.history.length - 1;
   return (
-    <ol className="space-y-2">
+    <ol className="ml-1 space-y-4 border-l border-border pl-4">
       {application.history.map((event, index) => (
         <TimelineEvent
           key={`${event.at}-${index}`}
           event={event}
+          current={index === lastIndex}
           onPatch={(patch) => handlers.onUpdateEvent(index, patch)}
         />
       ))}
@@ -130,20 +182,28 @@ function Timeline({
 
 function TimelineEvent({
   event,
+  current,
   onPatch,
 }: {
   event: StatusEvent;
+  current: boolean;
   onPatch: (patch: Partial<Pick<StatusEvent, "note" | "channel">>) => void;
 }) {
   const date = new Date(event.at).toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
+    year: "numeric",
   });
+  const dot = current
+    ? "bg-primary ring-2 ring-primary/25"
+    : "border border-border bg-background";
   return (
-    <li className="space-y-1 text-sm">
-      <div className="flex items-center gap-2">
-        <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-        <span className="font-medium">{event.status}</span>
+    <li className="relative">
+      <span
+        className={`absolute -left-[21px] top-1 size-2 rounded-full ${dot}`}
+      />
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-sm font-medium capitalize">{event.status}</span>
         <span className="text-xs text-muted-foreground">{date}</span>
         {event.status === "applied" && (
           <ChannelSelect
@@ -171,8 +231,8 @@ function ChannelSelect({
         channel && onChange(channel as ApplicationChannel)
       }
     >
-      <SelectTrigger className="h-6 w-32 text-xs">
-        <SelectValue placeholder="channel?" />
+      <SelectTrigger className="ml-auto h-6 w-32 text-xs">
+        <SelectValue placeholder="via channel…" />
       </SelectTrigger>
       <SelectContent>
         {CHANNELS.map((channel) => (
@@ -197,11 +257,15 @@ function NoteEditor({
 
   if (draft === null) {
     return (
-      <div className="ml-3.5 flex items-start gap-2">
-        {value && <p className="text-xs text-muted-foreground">{value}</p>}
+      <div className="mt-1 flex items-baseline gap-2">
+        {value && (
+          <p className="rounded-sm bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+            {value}
+          </p>
+        )}
         <button
           type="button"
-          className="text-xs text-primary underline-offset-2 hover:underline"
+          className="text-xs text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
           onClick={() => setDraft(value ?? "")}
         >
           {value ? "edit" : "+ note"}
@@ -215,7 +279,7 @@ function NoteEditor({
     setDraft(null);
   };
   return (
-    <div className="ml-3.5 flex items-center gap-2">
+    <div className="mt-1 flex items-center gap-2">
       <Input
         autoFocus
         className="h-7 text-xs"
