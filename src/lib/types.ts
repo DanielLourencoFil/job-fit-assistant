@@ -4,8 +4,12 @@
 export type LanguageLevel =
   "A1" | "A2" | "B1" | "B2" | "C1" | "C2" | "fluent" | "native";
 
+export type Relocation = "no" | "maybe" | "yes";
+
 export interface Profile {
   skills: string[];
+  /** Subset of skills marked as core strengths (starred) — they weigh more. */
+  keySkills: string[];
   /** language name (lowercase english, e.g. "german") → level */
   languages: Record<string, LanguageLevel>;
   seniority: string;
@@ -13,6 +17,8 @@ export interface Profile {
   /** cities/areas that count as commutable for hybrid/onsite roles */
   region: string[];
   remoteOk: boolean;
+  /** Willingness to relocate for an out-of-region role. */
+  relocation: Relocation;
 }
 
 export type WorkMode = "remote" | "hybrid" | "onsite";
@@ -50,10 +56,15 @@ export interface FitFlag {
 
 export type Verdict = "good" | "stretch" | "skip";
 
+export type Recommendation = "apply" | "stretch" | "skip";
+
 /** Computed deterministically in pure TS — never by the LLM (docs/DECISIONS.md #1). */
 export interface FitResult {
   verdict: Verdict;
   flags: FitFlag[];
+  /** 0–100 weighted score. Optional: snapshots saved before scoring existed lack it. */
+  score?: number;
+  recommendation?: Recommendation;
 }
 
 export type ApplicationStatus =

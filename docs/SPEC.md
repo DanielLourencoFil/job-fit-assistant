@@ -19,8 +19,8 @@ deterministic fit analysis against my profile → editable review card → save 
 ## Data model
 
 ```ts
-Profile          { skills: string[], languages: Record<string, string>, seniority: string,
-                   location: string, region: string[], remoteOk: boolean }
+Profile          { skills: string[], keySkills: string[], languages: Record<string, string>, seniority: string,
+                   location: string, region: string[], remoteOk: boolean, relocation: "no"|"maybe"|"yes" }
 JobPosting       { company, role, seniority, mustHaveSkills[], niceToHave[],
                    languageRequirement: { language, level } | null,
                    location, workMode, salary }                           // LLM output, zod-validated
@@ -28,18 +28,22 @@ JobPosting       { company, role, seniority, mustHaveSkills[], niceToHave[],
 // requires English canonical output (tech names, language levels) — locked by
 // a German-posting fixture in the contract tests.
 FitFlag          { label: string, status: "ok" | "warn" }
-FitResult        { verdict: "good" | "stretch" | "skip", flags: FitFlag[] }  // pure TS
+FitResult        { verdict, flags, score?: 0–100, recommendation?: "apply"|"stretch"|"skip" }  // pure TS; score/recommendation absent on legacy snapshots
 SavedApplication { id, posting, fit, status, createdAt }
 Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "rejected"
 ```
 
-## Fit rules (deterministic)
+## Fit rules (deterministic, weighted score)
 
-- Must-have skill present in profile → ok flag; absent → warn.
-- Language requirement above profile level (e.g. German C1 vs B2) → warn.
-- Seniority "senior-only" vs career-changer profile → warn.
-- Location: remote or within profile region → ok; relocation required → warn (not eliminatory).
-- Verdict: 0 warns → `good` · 1–2 warns → `stretch` · 3+ warns or hard blocker → `skip`.
+Flags (explainability) are unchanged; the verdict now derives from a 0–100 score:
+
+- **score = 55×skills + 20×language + 12×seniority + 13×location + alignment bonus (≤10)**
+- Skills: coverage weighted by posting importance (must-have 1.0, nice-to-have 0.3); no skills listed → neutral 0.7.
+- Alignment bonus: 10 × (matched must-haves that are starred key skills / total must-haves) — postings aligned with your strengths outrank mere coverage.
+- Language: meets → 1 · one CEFR level below → 0.4 · further below/absent → 0. **Below requirement caps the score at 75 — never "apply"** (the C1-gate lesson).
+- Seniority: entry/mid → 1 · senior-only → 0.4 **+ cap 78** · unknown → 0.8.
+- Location: remote(+ok)/region → 1 · unknown → 0.8 · out of region by relocation preference: willing 0.8 · maybe 0.5 · **refused 0 + cap 45 (skip)**.
+- Recommendation: **≥80 apply · 60–79 stretch · <60 skip** (named constants); verdict derived (apply→good). Saved snapshots keep their stored values (DECISIONS #11); legacy snapshots without a score render the old verdict.
 
 ## Test scenario checklist (replaces coverage %)
 
@@ -51,15 +55,17 @@ Status           "saved" | "applied" | "waiting" | "interview" | "offer" | "reje
 - [x] hallucinated extra fields → stripped
 - [x] German-language posting fixture → English canonical output (skills, language level)
 
-**`fit.ts` (unit, pure):**
+**`fit.ts` (unit, pure — hand-computed score anchors):**
 
-- [x] all skills match, no warns → `good`
-- [x] missing must-have skill → warn flag with skill name
-- [x] German C1 required vs B2 profile → warn
-- [x] seniority senior-only → warn
-- [x] relocation required → warn, not eliminatory
-- [x] 1–2 warns → `stretch`; 3+ → `skip` (boundary: exactly 2 and exactly 3)
-- [x] salary absent → no flag, no error
+- [x] full match on key skills → 100 · apply, all flags ok
+- [x] half must-haves missing → 75 · stretch, flag names the skill
+- [x] stacked gaps (skill + C1 + relocation) → 57 · skip
+- [x] German C1 vs B2 → capped at 75, never apply (+ warn flag)
+- [x] required language level met → apply; language absent → cap
+- [x] senior-only → capped at 78; junior/mid → apply
+- [x] relocation warns but can still be apply; hybrid in region → full weight
+- [x] normalization (.js/case) matches; non-key matches earn no bonus (98 vs 100)
+- [x] no skills listed → neutral 0.7, no crash; salary absent → no flag
 
 **`storage.ts` (unit, storage stub):**
 

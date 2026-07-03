@@ -20,6 +20,7 @@ export const profile: Profile = {
     "Claude Code",
     "AI-assisted development",
   ],
+  keySkills: ["TypeScript", "React", "Next.js", "Node.js", "Claude Code"],
   languages: {
     german: "B2",
     english: "fluent",
@@ -32,4 +33,5 @@ export const profile: Profile = {
   // "Nuremberg" included because extraction outputs English canonical names.
   region: ["Nürnberg", "Nuremberg", "Fürth", "Erlangen"],
   remoteOk: true,
+  relocation: "maybe",
 };

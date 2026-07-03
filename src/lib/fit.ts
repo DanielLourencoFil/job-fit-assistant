@@ -4,6 +4,7 @@ import type {
   JobPosting,
   LanguageLevel,
   Profile,
+  Recommendation,
   Verdict,
 } from "./types";
 
@@ -21,6 +22,21 @@ const LEVEL_RANK: Record<LanguageLevel, number> = {
 const SENIOR_PATTERN = /senior|lead|principal|staff/i;
 const ENTRY_PATTERN =
   /junior|entry|mid|quereinstieg|career.?changer|berufseinsteiger/i;
+
+/** Score weights and bands — the whole scoring policy lives here (docs/SPEC.md). */
+const WEIGHTS = { skills: 55, language: 20, seniority: 12, location: 13 };
+const ALIGNMENT_BONUS_MAX = 10;
+const NICE_TO_HAVE_WEIGHT = 0.3;
+const NO_SKILLS_LISTED_FACTOR = 0.7;
+const NEUTRAL_FACTOR = 0.8;
+/** Language below requirement can never be "apply" — lived reality of C1 gates. */
+const LANGUAGE_BELOW_CAP = 75;
+const SENIOR_ONLY_CAP = 78;
+/** A role requiring relocation the user ruled out is effectively untakeable. */
+const RELOCATION_REFUSED_CAP = 45;
+const RELOCATION_FACTOR = { yes: 0.8, maybe: 0.5, no: 0 } as const;
+export const APPLY_MIN = 80;
+export const STRETCH_MIN = 60;
 
 /** Tolerant, deterministic skill equality: case-insensitive, ".js" suffix ignored (docs/DECISIONS.md #6). */
 function normalizeSkill(skill: string): string {
@@ -40,6 +56,76 @@ function skillFlags(posting: JobPosting, profile: Profile): FitFlag[] {
       status: has ? "ok" : "warn",
     } satisfies FitFlag;
   });
+}
+
+/** Coverage weighted by posting importance + alignment bonus for starred matches. */
+function skillsComponent(
+  posting: JobPosting,
+  profile: Profile,
+): { factor: number; bonus: number } {
+  const owned = new Set(profile.skills.map(normalizeSkill));
+  const key = new Set(profile.keySkills.map(normalizeSkill));
+  const must = posting.mustHaveSkills;
+  const nice = posting.niceToHave;
+  const totalWeight = must.length + nice.length * NICE_TO_HAVE_WEIGHT;
+  if (totalWeight === 0) return { factor: NO_SKILLS_LISTED_FACTOR, bonus: 0 };
+
+  const matchedMust = must.filter((s) => owned.has(normalizeSkill(s)));
+  const matchedNice = nice.filter((s) => owned.has(normalizeSkill(s)));
+  const factor =
+    (matchedMust.length + matchedNice.length * NICE_TO_HAVE_WEIGHT) /
+    totalWeight;
+  const keyMatched = matchedMust.filter((s) => key.has(normalizeSkill(s)));
+  const bonus =
+    must.length === 0
+      ? 0
+      : ALIGNMENT_BONUS_MAX * (keyMatched.length / must.length);
+  return { factor, bonus };
+}
+
+function languageComponent(
+  posting: JobPosting,
+  profile: Profile,
+): { factor: number; below: boolean } {
+  const req = posting.languageRequirement;
+  if (!req) return { factor: 1, below: false };
+  const owned = profile.languages[req.language.toLowerCase()];
+  if (owned === undefined) return { factor: 0, below: true };
+  const deficit = LEVEL_RANK[req.level] - LEVEL_RANK[owned];
+  if (deficit <= 0) return { factor: 1, below: false };
+  return { factor: deficit === 1 ? 0.4 : 0, below: true };
+}
+
+function seniorityComponent(posting: JobPosting): {
+  factor: number;
+  seniorOnly: boolean;
+} {
+  const seniority = posting.seniority;
+  if (!seniority) return { factor: NEUTRAL_FACTOR, seniorOnly: false };
+  if (ENTRY_PATTERN.test(seniority)) return { factor: 1, seniorOnly: false };
+  if (SENIOR_PATTERN.test(seniority)) return { factor: 0.4, seniorOnly: true };
+  return { factor: NEUTRAL_FACTOR, seniorOnly: false };
+}
+
+function locationComponent(
+  posting: JobPosting,
+  profile: Profile,
+): { factor: number; refusedRelocation: boolean } {
+  if (posting.workMode === "remote") {
+    return { factor: profile.remoteOk ? 1 : 0.4, refusedRelocation: false };
+  }
+  if (!posting.location) {
+    return { factor: NEUTRAL_FACTOR, refusedRelocation: false };
+  }
+  const location = posting.location.toLowerCase();
+  const inRegion = profile.region.some((city) =>
+    location.includes(city.toLowerCase()),
+  );
+  if (inRegion) return { factor: 1, refusedRelocation: false };
+  return {
+    factor: RELOCATION_FACTOR[profile.relocation],
+    refusedRelocation: profile.relocation === "no",
+  };
 }
 
 function languageFlag(posting: JobPosting, profile: Profile): FitFlag | null {
@@ -87,24 +173,48 @@ function locationFlag(posting: JobPosting, profile: Profile): FitFlag | null {
       : { label: "Remote-only — profile prefers on-site", status: "warn" };
   }
   if (!posting.location) return null;
-  const location = posting.location.toLowerCase();
-  const inRegion = profile.region.some((city) =>
-    location.includes(city.toLowerCase()),
-  );
-  return inRegion
-    ? { label: `Within region (${posting.location})`, status: "ok" }
-    : {
-        label: `Relocation/commute required (${posting.location})`,
-        status: "warn",
-      };
+  const { factor, refusedRelocation } = locationComponent(posting, profile);
+  if (factor === 1) {
+    return { label: `Within region (${posting.location})`, status: "ok" };
+  }
+  return {
+    label: refusedRelocation
+      ? `Requires relocation (${posting.location}) — profile rules it out`
+      : `Relocation/commute required (${posting.location})`,
+    status: "warn",
+  };
 }
 
-function verdictFrom(flags: FitFlag[]): Verdict {
-  const warns = flags.filter((flag) => flag.status === "warn").length;
-  if (warns === 0) return "good";
-  if (warns <= 2) return "stretch";
+function computeScore(posting: JobPosting, profile: Profile): number {
+  const skills = skillsComponent(posting, profile);
+  const language = languageComponent(posting, profile);
+  const seniority = seniorityComponent(posting);
+  const location = locationComponent(posting, profile);
+
+  let score =
+    WEIGHTS.skills * skills.factor +
+    WEIGHTS.language * language.factor +
+    WEIGHTS.seniority * seniority.factor +
+    WEIGHTS.location * location.factor +
+    skills.bonus;
+  if (language.below) score = Math.min(score, LANGUAGE_BELOW_CAP);
+  if (seniority.seniorOnly) score = Math.min(score, SENIOR_ONLY_CAP);
+  if (location.refusedRelocation)
+    score = Math.min(score, RELOCATION_REFUSED_CAP);
+  return Math.round(Math.min(100, Math.max(0, score)));
+}
+
+function recommendationFrom(score: number): Recommendation {
+  if (score >= APPLY_MIN) return "apply";
+  if (score >= STRETCH_MIN) return "stretch";
   return "skip";
 }
+
+const VERDICT_BY_RECOMMENDATION: Record<Recommendation, Verdict> = {
+  apply: "good",
+  stretch: "stretch",
+  skip: "skip",
+};
 
 /** Pure and deterministic — the LLM never judges fit (docs/DECISIONS.md #1). */
 export function analyzeFit(posting: JobPosting, profile: Profile): FitResult {
@@ -114,5 +224,12 @@ export function analyzeFit(posting: JobPosting, profile: Profile): FitResult {
     locationFlag(posting, profile),
   ].filter((flag): flag is FitFlag => flag !== null);
   const flags = [...skillFlags(posting, profile), ...singleFlags];
-  return { verdict: verdictFrom(flags), flags };
+  const score = computeScore(posting, profile);
+  const recommendation = recommendationFrom(score);
+  return {
+    verdict: VERDICT_BY_RECOMMENDATION[recommendation],
+    flags,
+    score,
+    recommendation,
+  };
 }

@@ -137,7 +137,7 @@ function RowHeader({
         </p>
       </div>
       <div className="flex items-center gap-1">
-        <VerdictBadge verdict={application.fit.verdict} />
+        <VerdictBadge fit={application.fit} />
         <Button
           variant="ghost"
           size="icon"

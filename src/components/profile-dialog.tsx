@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SKILL_CATALOG } from "@/lib/skill-catalog";
-import type { LanguageLevel, Profile } from "@/lib/types";
+import type { LanguageLevel, Profile, Relocation } from "@/lib/types";
 
 const LEVELS: LanguageLevel[] = [
   "A1",
@@ -32,9 +32,15 @@ const LEVELS: LanguageLevel[] = [
   "fluent",
   "native",
 ];
-// v1 edits the two languages relevant to the target market; other profile
-// languages are preserved untouched (proportionality — no add-language UI).
-const EDITABLE_LANGUAGES = ["german", "english"] as const;
+// Fixed list covering the European job market; other stored languages are preserved.
+const EDITABLE_LANGUAGES = [
+  "german",
+  "english",
+  "spanish",
+  "portuguese",
+  "french",
+  "italian",
+] as const;
 
 interface ProfileDialogProps {
   profile: Profile;
@@ -87,40 +93,47 @@ interface SectionProps {
   setDraft: React.Dispatch<React.SetStateAction<Profile>>;
 }
 
+/** Chip cycle: off → selected → starred (key skill, weighs more) → off. */
+function cycleSkill(profile: Profile, skill: string): Profile {
+  const selected = profile.skills.includes(skill);
+  const starred = profile.keySkills.includes(skill);
+  if (!selected) return { ...profile, skills: [...profile.skills, skill] };
+  if (!starred) return { ...profile, keySkills: [...profile.keySkills, skill] };
+  return {
+    ...profile,
+    skills: profile.skills.filter((s) => s !== skill),
+    keySkills: profile.keySkills.filter((s) => s !== skill),
+  };
+}
+
 function SkillsSection({ draft, setDraft }: SectionProps) {
   const [custom, setCustom] = useState("");
-  const toggle = (skill: string) =>
-    setDraft((prev) => ({
-      ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter((s) => s !== skill)
-        : [...prev.skills, skill],
-    }));
+  const cycle = (skill: string) => setDraft((prev) => cycleSkill(prev, skill));
   const addCustom = () => {
     const skill = custom.trim();
-    if (skill && !draft.skills.includes(skill)) toggle(skill);
+    if (skill && !draft.skills.includes(skill)) cycle(skill);
     setCustom("");
   };
   const customSkills = draft.skills.filter((s) => !SKILL_CATALOG.includes(s));
+  const chipProps = (skill: string) => ({
+    skill,
+    selected: draft.skills.includes(skill),
+    starred: draft.skills.includes(skill) && draft.keySkills.includes(skill),
+    onClick: () => cycle(skill),
+  });
   return (
     <section className="space-y-2">
       <Label>Skills</Label>
+      <p className="text-xs text-muted-foreground">
+        Click to select · click again to star a key skill (★ weighs more) ·
+        third click removes.
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {SKILL_CATALOG.map((skill) => (
-          <SkillChip
-            key={skill}
-            skill={skill}
-            selected={draft.skills.includes(skill)}
-            onClick={() => toggle(skill)}
-          />
+          <SkillChip key={skill} {...chipProps(skill)} />
         ))}
         {customSkills.map((skill) => (
-          <SkillChip
-            key={skill}
-            skill={`${skill} ✕`}
-            selected
-            onClick={() => toggle(skill)}
-          />
+          <SkillChip key={skill} {...chipProps(skill)} />
         ))}
       </div>
       <div className="flex gap-2">
@@ -141,23 +154,26 @@ function SkillsSection({ draft, setDraft }: SectionProps) {
 function SkillChip({
   skill,
   selected,
+  starred,
   onClick,
 }: {
   skill: string;
   selected: boolean;
+  starred: boolean;
   onClick: () => void;
 }) {
+  const style = starred
+    ? "border-primary bg-primary font-semibold text-primary-foreground ring-2 ring-primary/40"
+    : selected
+      ? "border-primary bg-primary text-primary-foreground"
+      : "bg-background text-muted-foreground hover:border-primary";
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
-        selected
-          ? "border-primary bg-primary text-primary-foreground"
-          : "bg-background text-muted-foreground hover:border-primary"
-      }`}
+      className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${style}`}
     >
-      {skill}
+      {starred ? `★ ${skill}` : skill}
     </button>
   );
 }
@@ -237,6 +253,37 @@ function LocationSection({ draft, setDraft }: SectionProps) {
         />
         Open to remote work
       </label>
+      <RelocationSelect
+        value={draft.relocation}
+        onChange={(relocation) => setDraft((prev) => ({ ...prev, relocation }))}
+      />
     </section>
+  );
+}
+
+function RelocationSelect({
+  value,
+  onChange,
+}: {
+  value: Relocation;
+  onChange: (relocation: Relocation) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm">Relocation</span>
+      <Select
+        value={value}
+        onValueChange={(next) => next && onChange(next as Relocation)}
+      >
+        <SelectTrigger className="h-8 w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="no">not willing</SelectItem>
+          <SelectItem value="maybe">for the right role</SelectItem>
+          <SelectItem value="yes">willing</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

@@ -57,7 +57,7 @@ export function ReviewCard({
     <Card>
       <CardHeader className="flex-row items-center justify-between">
         <CardTitle className="text-base">Review extraction</CardTitle>
-        <VerdictBadge verdict={fit.verdict} />
+        <VerdictBadge fit={fit} />
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
