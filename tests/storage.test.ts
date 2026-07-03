@@ -7,6 +7,8 @@ import {
   loadProfile,
   saveApplication,
   saveProfile,
+  updateApplicationDetails,
+  updateApplicationEvent,
   updateApplicationStatus,
   type StorageLike,
 } from "@/lib/storage";
@@ -97,5 +99,86 @@ describe("profile persistence", () => {
 
     expect(first.id).not.toBe(second.id);
     expect(new Date(first.createdAt).toISOString()).toBe(first.createdAt);
+  });
+});
+
+describe("timeline history", () => {
+  it("a new application starts with a single 'saved' event at createdAt", () => {
+    const application = createApplication(posting, fit);
+
+    expect(application.history).toEqual([
+      { status: "saved", at: application.createdAt },
+    ]);
+  });
+
+  it("status change appends a timestamped event", () => {
+    const stub = makeStub();
+    const application = createApplication(posting, fit);
+    saveApplication(application, stub);
+
+    const [updated] = updateApplicationStatus(application.id, "applied", stub);
+
+    expect(updated.history).toHaveLength(2);
+    expect(updated.history[1].status).toBe("applied");
+    expect(new Date(updated.history[1].at).toISOString()).toBe(
+      updated.history[1].at,
+    );
+  });
+});
+
+describe("timeline notes, details & migration", () => {
+  it("event note and channel edits persist", () => {
+    const stub = makeStub();
+    const application = createApplication(posting, fit);
+    saveApplication(application, stub);
+    updateApplicationStatus(application.id, "applied", stub);
+
+    updateApplicationEvent(
+      application.id,
+      1,
+      { note: "Sent tailored CV", channel: "email" },
+      stub,
+    );
+    const [loaded] = loadApplications(stub);
+
+    expect(loaded.history[1].note).toBe("Sent tailored CV");
+    expect(loaded.history[1].channel).toBe("email");
+    expect(loaded.history[0].note).toBeUndefined();
+  });
+
+  it("url and contact persist via details update", () => {
+    const stub = makeStub();
+    const application = createApplication(posting, fit);
+    saveApplication(application, stub);
+
+    updateApplicationDetails(
+      application.id,
+      {
+        url: "https://example.com/job",
+        contact: { name: "Florian", via: "LinkedIn InMail" },
+      },
+      stub,
+    );
+    const [loaded] = loadApplications(stub);
+
+    expect(loaded.url).toBe("https://example.com/job");
+    expect(loaded.contact).toEqual({ name: "Florian", via: "LinkedIn InMail" });
+  });
+
+  it("legacy records without history migrate to a derived event", () => {
+    const legacy = {
+      id: "old-1",
+      posting,
+      fit,
+      status: "applied",
+      createdAt: "2026-06-01T10:00:00.000Z",
+    };
+    const stub = makeStub({ "jfa.applications": JSON.stringify([legacy]) });
+
+    const [migrated] = loadApplications(stub);
+
+    expect(migrated.history).toEqual([
+      { status: "applied", at: "2026-06-01T10:00:00.000Z" },
+    ]);
   });
 });

@@ -5,6 +5,7 @@ import type {
   JobPosting,
   Profile,
   SavedApplication,
+  StatusEvent,
 } from "./types";
 
 const APPLICATIONS_KEY = "jfa.applications";
@@ -30,11 +31,24 @@ function readJson(key: string, storage: StorageLike | null): unknown {
   }
 }
 
+/** Records saved before the timeline existed get a derived first event. */
+function normalizeApplication(application: SavedApplication): SavedApplication {
+  if (Array.isArray(application.history) && application.history.length > 0) {
+    return application;
+  }
+  return {
+    ...application,
+    history: [{ status: application.status, at: application.createdAt }],
+  };
+}
+
 export function loadApplications(
   storage: StorageLike | null = browserStorage(),
 ): SavedApplication[] {
   const data = readJson(APPLICATIONS_KEY, storage);
-  return Array.isArray(data) ? (data as SavedApplication[]) : [];
+  return Array.isArray(data)
+    ? (data as SavedApplication[]).map(normalizeApplication)
+    : [];
 }
 
 function persistApplications(
@@ -50,12 +64,14 @@ export function createApplication(
   posting: JobPosting,
   fit: FitResult,
 ): SavedApplication {
+  const createdAt = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
     posting,
     fit,
     status: "saved",
-    createdAt: new Date().toISOString(),
+    createdAt,
+    history: [{ status: "saved", at: createdAt }],
   };
 }
 
@@ -73,7 +89,47 @@ export function updateApplicationStatus(
   storage: StorageLike | null = browserStorage(),
 ): SavedApplication[] {
   const applications = loadApplications(storage).map((application) =>
-    application.id === id ? { ...application, status } : application,
+    application.id === id
+      ? {
+          ...application,
+          status,
+          history: [
+            ...application.history,
+            { status, at: new Date().toISOString() },
+          ],
+        }
+      : application,
+  );
+  return persistApplications(applications, storage);
+}
+
+/** Edit the note/channel of one timeline event. */
+export function updateApplicationEvent(
+  id: string,
+  eventIndex: number,
+  patch: Partial<Pick<StatusEvent, "note" | "channel">>,
+  storage: StorageLike | null = browserStorage(),
+): SavedApplication[] {
+  const applications = loadApplications(storage).map((application) =>
+    application.id === id
+      ? {
+          ...application,
+          history: application.history.map((event, index) =>
+            index === eventIndex ? { ...event, ...patch } : event,
+          ),
+        }
+      : application,
+  );
+  return persistApplications(applications, storage);
+}
+
+export function updateApplicationDetails(
+  id: string,
+  patch: Partial<Pick<SavedApplication, "url" | "contact">>,
+  storage: StorageLike | null = browserStorage(),
+): SavedApplication[] {
+  const applications = loadApplications(storage).map((application) =>
+    application.id === id ? { ...application, ...patch } : application,
   );
   return persistApplications(applications, storage);
 }

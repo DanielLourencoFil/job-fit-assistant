@@ -9,6 +9,8 @@ import {
   loadProfile,
   saveApplication,
   saveProfile,
+  updateApplicationDetails,
+  updateApplicationEvent,
   updateApplicationStatus,
 } from "@/lib/storage";
 import type {
@@ -17,6 +19,7 @@ import type {
   JobPosting,
   Profile,
   SavedApplication,
+  StatusEvent,
 } from "@/lib/types";
 
 /**
@@ -76,9 +79,24 @@ export function useApplications() {
     applicationsCache = updateApplicationStatus(id, status);
     emit();
   };
+  const updateEvent = (
+    id: string,
+    eventIndex: number,
+    patch: Partial<Pick<StatusEvent, "note" | "channel">>,
+  ) => {
+    applicationsCache = updateApplicationEvent(id, eventIndex, patch);
+    emit();
+  };
+  const updateDetails = (
+    id: string,
+    patch: Partial<Pick<SavedApplication, "url" | "contact">>,
+  ) => {
+    applicationsCache = updateApplicationDetails(id, patch);
+    emit();
+  };
   const remove = (id: string) => {
     applicationsCache = deleteApplication(id);
     emit();
   };
-  return { applications, save, setStatus, remove };
+  return { applications, save, setStatus, updateEvent, updateDetails, remove };
 }

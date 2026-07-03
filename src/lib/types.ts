@@ -59,6 +59,26 @@ export interface FitResult {
 export type ApplicationStatus =
   "saved" | "applied" | "waiting" | "interview" | "offer" | "rejected";
 
+export type ApplicationChannel =
+  "portal" | "email" | "easy_apply" | "referral" | "other";
+
+/** One step in the application's real-world timeline. */
+export interface StatusEvent {
+  status: ApplicationStatus;
+  /** ISO timestamp */
+  at: string;
+  note?: string;
+  /** How the application was sent — meaningful on "applied" events. */
+  channel?: ApplicationChannel;
+}
+
+/** The person reached directly for this posting (the differentiator move). */
+export interface Contact {
+  name: string;
+  /** e.g. "LinkedIn InMail", "email" */
+  via: string;
+}
+
 export interface SavedApplication {
   id: string;
   posting: JobPosting;
@@ -66,4 +86,9 @@ export interface SavedApplication {
   status: ApplicationStatus;
   /** ISO timestamp — string so the whole object is JSON/localStorage-safe */
   createdAt: string;
+  /** Append-only status history; first entry is the initial "saved". */
+  history: StatusEvent[];
+  /** Source URL of the posting. */
+  url?: string;
+  contact?: Contact;
 }

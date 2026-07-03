@@ -66,6 +66,11 @@ export default function Home() {
             applications={applications.applications}
             onStatusChange={applications.setStatus}
             onDelete={applications.remove}
+            handlersFor={(id) => ({
+              onUpdateEvent: (eventIndex, patch) =>
+                applications.updateEvent(id, eventIndex, patch),
+              onUpdateDetails: (patch) => applications.updateDetails(id, patch),
+            })}
           />
         </section>
       </div>

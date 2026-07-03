@@ -2,7 +2,10 @@
 
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useState } from "react";
-import { FlagList } from "@/components/flag-list";
+import {
+  ApplicationDetails,
+  type DetailsHandlers,
+} from "@/components/application-details";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,11 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { VerdictBadge } from "@/components/verdict-badge";
-import type {
-  ApplicationStatus,
-  JobPosting,
-  SavedApplication,
-} from "@/lib/types";
+import { relativeDays } from "@/lib/dates";
+import type { ApplicationStatus, SavedApplication } from "@/lib/types";
 
 const STATUSES: ApplicationStatus[] = [
   "saved",
@@ -31,12 +31,14 @@ interface ApplicationsListProps {
   applications: SavedApplication[];
   onStatusChange: (id: string, status: ApplicationStatus) => void;
   onDelete: (id: string) => void;
+  handlersFor: (id: string) => DetailsHandlers;
 }
 
 export function ApplicationsList({
   applications,
   onStatusChange,
   onDelete,
+  handlersFor,
 }: ApplicationsListProps) {
   if (applications.length === 0) {
     return (
@@ -53,6 +55,7 @@ export function ApplicationsList({
           application={application}
           onStatusChange={onStatusChange}
           onDelete={onDelete}
+          handlers={handlersFor(application.id)}
         />
       ))}
     </ul>
@@ -63,10 +66,12 @@ function ApplicationRow({
   application,
   onStatusChange,
   onDelete,
+  handlers,
 }: {
   application: SavedApplication;
   onStatusChange: (id: string, status: ApplicationStatus) => void;
   onDelete: (id: string) => void;
+  handlers: DetailsHandlers;
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -76,7 +81,9 @@ function ApplicationRow({
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
       />
-      {expanded && <SavedAnalysis application={application} />}
+      {expanded && (
+        <ApplicationDetails application={application} handlers={handlers} />
+      )}
       <div className="flex items-center justify-between gap-2">
         <Select
           value={application.status}
@@ -125,6 +132,9 @@ function RowHeader({
           {posting.company ?? "Unknown company"}
         </p>
         <p className="truncate text-sm text-muted-foreground">{posting.role}</p>
+        <p className="text-xs text-muted-foreground">
+          {application.status} · {relativeDays(lastActivityAt(application))}
+        </p>
       </div>
       <div className="flex items-center gap-1">
         <VerdictBadge verdict={application.fit.verdict} />
@@ -141,23 +151,6 @@ function RowHeader({
   );
 }
 
-/** Read-only snapshot of the analysis as it was at save time (DECISIONS #11). */
-function SavedAnalysis({ application }: { application: SavedApplication }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">
-        {metaLine(application.posting)}
-      </p>
-      <FlagList fit={application.fit} />
-    </div>
-  );
-}
-
-function metaLine(posting: JobPosting): string {
-  const language = posting.languageRequirement
-    ? `${posting.languageRequirement.language} ${posting.languageRequirement.level}`
-    : null;
-  return [posting.location, posting.workMode, language, posting.salary]
-    .filter(Boolean)
-    .join(" · ");
+function lastActivityAt(application: SavedApplication): string {
+  return application.history.at(-1)?.at ?? application.createdAt;
 }
