@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FlagList } from "@/components/flag-list";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { analyzeFit } from "@/lib/fit";
 import type { FitResult, JobPosting, Profile } from "@/lib/types";
@@ -116,27 +117,5 @@ function SkillsInput({
         onChange={(event) => onChange(splitList(event.target.value))}
       />
     </div>
-  );
-}
-
-function FlagList({ fit }: { fit: FitResult }) {
-  return (
-    <ul className="space-y-1 rounded-md border p-3 text-sm">
-      {fit.flags.map((flag) => (
-        <li
-          key={flag.label}
-          className={
-            flag.status === "ok" ? "text-green-700" : "text-yellow-700"
-          }
-        >
-          {flag.status === "ok" ? "✓" : "⚠"} {flag.label}
-        </li>
-      ))}
-      {fit.flags.length === 0 && (
-        <li className="text-muted-foreground">
-          No flags — nothing to compare yet.
-        </li>
-      )}
-    </ul>
   );
 }
