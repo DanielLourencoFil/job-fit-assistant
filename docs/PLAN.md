@@ -20,8 +20,13 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: manual check. Commit: `feat: applications list`.
 - [x] **7b. UI: profile editor** — skills multi-select from `SKILL_CATALOG` + custom-skill input + languages + location/remote; persisted via storage; used by fit + sent to extraction.
       DoD: edited profile changes fit verdicts; persists across reload. Commit: `feat: editable profile`.
-- [ ] **8. States & errors** — loading, empty, parse-failure message surfaced to user.
-      DoD: demo-mode failure fixture renders friendly error. Commit: `feat: loading/empty/error states`.
+- [x] **8. States, loader & UX (amended)** —
+      8a. fixed-height textarea + input collapses after analysis (result above the fold);
+      8b. narrated loader (staged pipeline messages during extraction);
+      8c. "How it works" dialog in the header (explains extraction vs deterministic fit);
+      8d. review existing error/empty states;
+      8e. dark mode (next-themes + toggle; shadcn .dark vars already generated).
+      DoD: no scroll needed to see the verdict; loader visible during analysis; dark mode toggles and persists. Commit: `feat: UX polish — collapse, narrated loader, how-it-works, dark mode`.
 - [ ] **9. Deploy** — Vercel, demo mode default; `ANTHROPIC_API_KEY` only as local/env opt-in.
       DoD: public URL works with zero setup. Commit: `chore: deploy config`.
 - [ ] **10. README** — story, architecture sketch, how rules are enforced, link to CLAUDE.md/DECISIONS.md, demo URL.
