@@ -15,9 +15,9 @@ Built as a focused showcase: not of feature breadth, but of how a single AI-powe
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)
-![Tests](https://img.shields.io/badge/tests-52%20passing-3fb950?logo=vitest)
+![Tests](https://img.shields.io/badge/tests-59%20passing-3fb950?logo=vitest)
 
-> **Try it with zero setup.** The live deploy runs in **demo mode** — no API key, no login. Paste any posting (German ones work; extraction returns English canonical output) or hit _Load example_.
+> **Try it with zero setup.** The live deploy runs **real extraction** (rate-limited to 5 analyses/hour per IP) — no login. Paste any posting (German ones work; extraction returns English canonical output) or hit _Load example_. Without an `ANTHROPIC_API_KEY`, the app falls back to **demo mode** with a recorded response.
 
 <!-- Drop a screenshot/GIF at docs/demo.png and uncomment:
 ![Job Fit Assistant](docs/demo.png)

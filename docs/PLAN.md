@@ -33,9 +33,9 @@ Deviations from this plan require updating this file first (plan is the contract
       DoD: timeline renders with dates+notes; legacy saved cards migrate without crash. Commit: `feat: application timeline, notes and contact tracking`.
 - [x] **8h. Weighted fit score + recommendation** — key-skill stars in profile (chip cycles: off → selected → starred); score = skills 55% (posting must=1.0/nice=0.3 + alignment bonus ≤10) + language 20% + seniority 12% + location 13%; bands ≥80 Apply / 60–79 Stretch / <60 Skip (named constants); badge shows "82% · Apply"; verdict derived from bands; saved cards keep snapshots (DECISIONS #11). Full unit tests incl. band boundaries.
       DoD: all scoring scenarios green. Commit: `feat: weighted fit score and recommendation`.
-- [ ] **9. Deploy** — Vercel, demo mode default; `ANTHROPIC_API_KEY` only as local/env opt-in.
+- [x] **9. Deploy** — Vercel, demo mode default; `ANTHROPIC_API_KEY` only as local/env opt-in.
       DoD: public URL works with zero setup. Commit: `chore: deploy config`.
-- [ ] **10. README** — story, architecture sketch, how rules are enforced, link to CLAUDE.md/DECISIONS.md, demo URL.
+- [x] **10. README** — story, architecture sketch, how rules are enforced, link to CLAUDE.md/DECISIONS.md, demo URL.
       DoD: a recruiter understands the repo in 3 minutes. Commit: `docs: README`.
 - [ ] **11. Final audit — fresh session** — rule compliance, dead code, orphan imports, risks.
       DoD: findings fixed or recorded. Commit: `audit: final review`.
