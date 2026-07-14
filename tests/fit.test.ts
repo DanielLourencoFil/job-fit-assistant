@@ -60,7 +60,10 @@ describe("score anchors", () => {
     const fit = analyzeFit(
       makePosting({
         mustHaveSkills: ["TypeScript", "Angular"],
-        languageRequirement: { language: "german", level: "C1" },
+        languageRequirement: {
+          mode: "all",
+          items: [{ language: "german", level: "C1" }],
+        },
         workMode: "onsite",
         location: "München, Germany",
       }),
@@ -77,7 +80,12 @@ describe("score anchors", () => {
 describe("language component and cap", () => {
   it("German C1 vs B2 profile → capped at 75, never apply", () => {
     const fit = analyzeFit(
-      makePosting({ languageRequirement: { language: "german", level: "C1" } }),
+      makePosting({
+        languageRequirement: {
+          mode: "all",
+          items: [{ language: "german", level: "C1" }],
+        },
+      }),
       testProfile,
     );
 
@@ -92,7 +100,12 @@ describe("language component and cap", () => {
 
   it("required level met → no cap, apply", () => {
     const fit = analyzeFit(
-      makePosting({ languageRequirement: { language: "german", level: "B2" } }),
+      makePosting({
+        languageRequirement: {
+          mode: "all",
+          items: [{ language: "german", level: "B2" }],
+        },
+      }),
       testProfile,
     );
 
@@ -102,7 +115,12 @@ describe("language component and cap", () => {
 
   it("language absent from profile → factor 0 and cap", () => {
     const fit = analyzeFit(
-      makePosting({ languageRequirement: { language: "french", level: "B1" } }),
+      makePosting({
+        languageRequirement: {
+          mode: "all",
+          items: [{ language: "french", level: "B1" }],
+        },
+      }),
       testProfile,
     );
 
@@ -111,6 +129,99 @@ describe("language component and cap", () => {
       label: "French B1 required — not in profile",
       status: "warn",
     });
+  });
+});
+
+describe("language connectives — OR is max, AND is min (DECISIONS #14)", () => {
+  it("OR (Laioutr case): german absent OR english met → max wins, no cap", () => {
+    const fit = analyzeFit(
+      makePosting({
+        languageRequirement: {
+          mode: "any",
+          items: [
+            { language: "german", level: "fluent" },
+            { language: "english", level: "fluent" },
+          ],
+        },
+      }),
+      testProfile,
+    );
+
+    expect(fit.score).toBe(100);
+    expect(fit.recommendation).toBe("apply");
+    expect(fit.flags).toContainEqual({
+      label:
+        "German fluent or English fluent required — profile has English (fluent)",
+      status: "ok",
+    });
+  });
+
+  it("OR with no alternative met → factor 0 and cap", () => {
+    const fit = analyzeFit(
+      makePosting({
+        languageRequirement: {
+          mode: "any",
+          items: [
+            { language: "french", level: "B1" },
+            { language: "italian", level: "B1" },
+          ],
+        },
+      }),
+      testProfile,
+    );
+
+    expect(fit.score).toBe(75);
+    expect(fit.flags).toContainEqual({
+      label: "French B1 or Italian B1 required — no alternative met",
+      status: "warn",
+    });
+  });
+});
+
+describe("language AND — weakest conjunct gates (DECISIONS #14)", () => {
+  it("AND (ALTEN case): english met AND german one below → min gates, cap", () => {
+    const fit = analyzeFit(
+      makePosting({
+        languageRequirement: {
+          mode: "all",
+          items: [
+            { language: "english", level: "fluent" },
+            { language: "german", level: "C1" },
+          ],
+        },
+      }),
+      testProfile,
+    );
+
+    // min(1, 0.4) = 0.4 → raw 95.6, language-below cap wins.
+    expect(fit.score).toBe(75);
+    expect(fit.recommendation).toBe("stretch");
+    expect(fit.flags).toContainEqual({
+      label: "English fluent required — profile has fluent",
+      status: "ok",
+    });
+    expect(fit.flags).toContainEqual({
+      label: "German C1 required — profile is B2",
+      status: "warn",
+    });
+  });
+
+  it("AND with every conjunct met → full factor, apply", () => {
+    const fit = analyzeFit(
+      makePosting({
+        languageRequirement: {
+          mode: "all",
+          items: [
+            { language: "english", level: "fluent" },
+            { language: "german", level: "B2" },
+          ],
+        },
+      }),
+      testProfile,
+    );
+
+    expect(fit.score).toBe(100);
+    expect(fit.recommendation).toBe("apply");
   });
 });
 

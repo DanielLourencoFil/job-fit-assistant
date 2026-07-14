@@ -22,8 +22,10 @@ deterministic fit analysis against my profile → editable review card → save 
 Profile          { skills: string[], keySkills: string[], languages: Record<string, string>, seniority: string,
                    location: string, region: string[], remoteOk: boolean, relocation: "no"|"maybe"|"yes" }
 JobPosting       { company, role, seniority, mustHaveSkills[], niceToHave[],
-                   languageRequirement: { language, level } | null,
+                   languageRequirement: { mode: "all"|"any", items: {language, level}[] } | null,
                    location, workMode, salary }                           // LLM output, zod-validated
+// Language mode: "all" = every language required (und/and) — scored min;
+// "any" = alternatives (oder/or) — scored max. See DECISIONS #14.
 // Postings may be in any language (German is common). The extraction contract
 // requires English canonical output (tech names, language levels) — locked by
 // a German-posting fixture in the contract tests.

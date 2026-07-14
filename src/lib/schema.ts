@@ -24,7 +24,14 @@ export const jobPostingSchema = z.object({
   mustHaveSkills: z.array(z.string()),
   niceToHave: z.array(z.string()),
   languageRequirement: z
-    .object({ language: z.string().min(1), level: languageLevelSchema })
+    .object({
+      mode: z.enum(["all", "any"]),
+      items: z
+        .array(
+          z.object({ language: z.string().min(1), level: languageLevelSchema }),
+        )
+        .min(1),
+    })
     .nullable(),
   location: z.string().nullable(),
   workMode: z.enum(["remote", "hybrid", "onsite"]).nullable(),

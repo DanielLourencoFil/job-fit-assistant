@@ -4,7 +4,15 @@
   "seniority": null,
   "mustHaveSkills": ["Node.js", "React", "REST APIs", "SQL", "Scrum"],
   "niceToHave": ["Vue", "Angular", "Claude Code"],
-  "languageRequirement": { "language": "german", "level": "C1" },
+  "languageRequirement": {
+    "mode": "all",
+    "items": [
+      {
+        "language": "german",
+        "level": "C1"
+      }
+    ]
+  },
   "location": "Jena, Germany",
   "workMode": "remote",
   "salary": null

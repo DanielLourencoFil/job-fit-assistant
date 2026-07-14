@@ -24,10 +24,20 @@ export interface Profile {
 export type WorkMode = "remote" | "hybrid" | "onsite";
 
 /** Structured so the fit engine compares levels on an ordered scale — never parses free text. */
-export interface LanguageRequirement {
+export interface LanguageAlternative {
   /** lowercase English language name, e.g. "german" — regardless of the posting's language */
   language: string;
   level: LanguageLevel;
+}
+
+/**
+ * A posting's language demand with the connective as data (docs/DECISIONS.md #14):
+ * "all" = every item required (and/und) · "any" = alternatives (or/oder).
+ * The fit engine evaluates the connective deterministically — min for AND, max for OR.
+ */
+export interface LanguageRequirement {
+  mode: "all" | "any";
+  items: LanguageAlternative[];
 }
 
 /**

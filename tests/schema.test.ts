@@ -17,8 +17,8 @@ describe("parseExtraction — LLM boundary contract", () => {
       "Clean Code",
     ]);
     expect(result.posting.languageRequirement).toEqual({
-      language: "english",
-      level: "fluent",
+      mode: "all",
+      items: [{ language: "english", level: "fluent" }],
     });
     expect(result.posting.workMode).toBe("hybrid");
   });
@@ -49,8 +49,8 @@ describe("parseExtraction — LLM boundary contract", () => {
     expect(result.posting.mustHaveSkills).not.toContain("Datenbanken");
     // Language requirement is structured and lowercase-English, not "Deutsch C1".
     expect(result.posting.languageRequirement).toEqual({
-      language: "german",
-      level: "C1",
+      mode: "all",
+      items: [{ language: "german", level: "C1" }],
     });
   });
 });
@@ -70,14 +70,48 @@ describe("parseExtraction — rejections at the boundary", () => {
   it("rejects an invalid language level instead of letting it into the app", () => {
     const badLevel = {
       ...validPosting,
-      languageRequirement: { language: "german", level: "B2+" },
+      languageRequirement: {
+        mode: "all",
+        items: [{ language: "german", level: "B2+" }],
+      },
     };
 
     const result = parseExtraction(badLevel);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.error).toContain("languageRequirement.level");
+    expect(result.error).toContain("languageRequirement.items.0.level");
+  });
+
+  it("rejects the legacy single-object language shape — the contract is the connective", () => {
+    const legacyShape = {
+      ...validPosting,
+      languageRequirement: { language: "german", level: "C1" },
+    };
+
+    const result = parseExtraction(legacyShape);
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts an OR requirement and rejects an empty items array", () => {
+    const orShape = {
+      ...validPosting,
+      languageRequirement: {
+        mode: "any",
+        items: [
+          { language: "german", level: "fluent" },
+          { language: "english", level: "fluent" },
+        ],
+      },
+    };
+    const emptyItems = {
+      ...validPosting,
+      languageRequirement: { mode: "any", items: [] },
+    };
+
+    expect(parseExtraction(orShape).ok).toBe(true);
+    expect(parseExtraction(emptyItems).ok).toBe(false);
   });
 });
 

@@ -83,17 +83,34 @@ function skillsComponent(
   return { factor, bonus };
 }
 
+/** Graded satisfaction of one language item: met = 1, one level short = 0.4, worse = 0. */
+function levelFactor(
+  owned: LanguageLevel | undefined,
+  required: LanguageLevel,
+): number {
+  if (owned === undefined) return 0;
+  const deficit = LEVEL_RANK[required] - LEVEL_RANK[owned];
+  if (deficit <= 0) return 1;
+  return deficit === 1 ? 0.4 : 0;
+}
+
+/**
+ * Evaluates the connective (docs/DECISIONS.md #14): "all" aggregates with min
+ * (weakest conjunct gates), "any" with max (best alternative wins) — the Gödel
+ * t-norm/t-conorm over graded satisfaction.
+ */
 function languageComponent(
   posting: JobPosting,
   profile: Profile,
 ): { factor: number; below: boolean } {
   const req = posting.languageRequirement;
-  if (!req) return { factor: 1, below: false };
-  const owned = profile.languages[req.language.toLowerCase()];
-  if (owned === undefined) return { factor: 0, below: true };
-  const deficit = LEVEL_RANK[req.level] - LEVEL_RANK[owned];
-  if (deficit <= 0) return { factor: 1, below: false };
-  return { factor: deficit === 1 ? 0.4 : 0, below: true };
+  if (!req || req.items.length === 0) return { factor: 1, below: false };
+  const factors = req.items.map((item) =>
+    levelFactor(profile.languages[item.language.toLowerCase()], item.level),
+  );
+  const factor =
+    req.mode === "any" ? Math.max(...factors) : Math.min(...factors);
+  return { factor, below: factor < 1 };
 }
 
 function seniorityComponent(posting: JobPosting): {
@@ -128,25 +145,52 @@ function locationComponent(
   };
 }
 
-function languageFlag(posting: JobPosting, profile: Profile): FitFlag | null {
+/** One flag per conjunct ("all") or a single combined flag ("any"). */
+function languageFlags(posting: JobPosting, profile: Profile): FitFlag[] {
   const req = posting.languageRequirement;
-  if (!req) return null;
-  const name = capitalize(req.language);
-  const owned = profile.languages[req.language.toLowerCase()];
+  if (!req || req.items.length === 0) return [];
+  if (req.mode === "all")
+    return req.items.map((i) => singleLanguageFlag(i, profile));
+
+  const label = req.items
+    .map((i) => `${capitalize(i.language)} ${i.level}`)
+    .join(" or ");
+  const met = req.items.find(
+    (i) =>
+      levelFactor(profile.languages[i.language.toLowerCase()], i.level) === 1,
+  );
+  if (met) {
+    const owned = profile.languages[met.language.toLowerCase()];
+    return [
+      {
+        label: `${label} required — profile has ${capitalize(met.language)} (${owned})`,
+        status: "ok",
+      },
+    ];
+  }
+  return [{ label: `${label} required — no alternative met`, status: "warn" }];
+}
+
+function singleLanguageFlag(
+  item: { language: string; level: LanguageLevel },
+  profile: Profile,
+): FitFlag {
+  const name = capitalize(item.language);
+  const owned = profile.languages[item.language.toLowerCase()];
   if (owned === undefined) {
     return {
-      label: `${name} ${req.level} required — not in profile`,
+      label: `${name} ${item.level} required — not in profile`,
       status: "warn",
     };
   }
-  if (LEVEL_RANK[owned] >= LEVEL_RANK[req.level]) {
+  if (LEVEL_RANK[owned] >= LEVEL_RANK[item.level]) {
     return {
-      label: `${name} ${req.level} required — profile has ${owned}`,
+      label: `${name} ${item.level} required — profile has ${owned}`,
       status: "ok",
     };
   }
   return {
-    label: `${name} ${req.level} required — profile is ${owned}`,
+    label: `${name} ${item.level} required — profile is ${owned}`,
     status: "warn",
   };
 }
@@ -219,11 +263,14 @@ const VERDICT_BY_RECOMMENDATION: Record<Recommendation, Verdict> = {
 /** Pure and deterministic — the LLM never judges fit (docs/DECISIONS.md #1). */
 export function analyzeFit(posting: JobPosting, profile: Profile): FitResult {
   const singleFlags = [
-    languageFlag(posting, profile),
     seniorityFlag(posting),
     locationFlag(posting, profile),
   ].filter((flag): flag is FitFlag => flag !== null);
-  const flags = [...skillFlags(posting, profile), ...singleFlags];
+  const flags = [
+    ...skillFlags(posting, profile),
+    ...languageFlags(posting, profile),
+    ...singleFlags,
+  ];
   const score = computeScore(posting, profile);
   const recommendation = recommendationFrom(score);
   return {

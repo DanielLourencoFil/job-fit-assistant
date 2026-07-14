@@ -4,7 +4,15 @@
   "seniority": null,
   "mustHaveSkills": ["Vue", "TypeScript", "Clean Code"],
   "niceToHave": ["Agentic coding", "UI/UX awareness"],
-  "languageRequirement": { "language": "english", "level": "fluent" },
+  "languageRequirement": {
+    "mode": "all",
+    "items": [
+      {
+        "language": "english",
+        "level": "fluent"
+      }
+    ]
+  },
   "location": "Nürnberg, Germany",
   "workMode": "hybrid",
   "salary": null

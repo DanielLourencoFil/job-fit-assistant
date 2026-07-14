@@ -41,8 +41,8 @@ describe("POST /api/extract", () => {
     expect(payload.demo).toBe(true);
     expect(payload.posting.company).toBe("zollsoft GmbH");
     expect(payload.posting.languageRequirement).toEqual({
-      language: "german",
-      level: "C1",
+      mode: "all",
+      items: [{ language: "german", level: "C1" }],
     });
   });
 

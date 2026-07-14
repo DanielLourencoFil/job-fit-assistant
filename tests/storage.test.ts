@@ -164,6 +164,30 @@ describe("timeline notes, details & migration", () => {
     expect(loaded.url).toBe("https://example.com/job");
     expect(loaded.contact).toEqual({ name: "Florian", via: "LinkedIn InMail" });
   });
+});
+
+describe("legacy snapshot migration", () => {
+  it("legacy single-object language snapshots migrate to a one-item 'all'", () => {
+    const legacyPosting = {
+      ...posting,
+      languageRequirement: { language: "german", level: "C1" },
+    };
+    const legacy = {
+      id: "old-lang",
+      posting: legacyPosting,
+      fit,
+      status: "saved",
+      createdAt: "2026-06-01T10:00:00.000Z",
+    };
+    const stub = makeStub({ "jfa.applications": JSON.stringify([legacy]) });
+
+    const [migrated] = loadApplications(stub);
+
+    expect(migrated.posting.languageRequirement).toEqual({
+      mode: "all",
+      items: [{ language: "german", level: "C1" }],
+    });
+  });
 
   it("legacy records without history migrate to a derived event", () => {
     const legacy = {

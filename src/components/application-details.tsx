@@ -295,8 +295,11 @@ function NoteEditor({
 }
 
 function metaLine(posting: JobPosting): string {
-  const language = posting.languageRequirement
-    ? `${posting.languageRequirement.language} ${posting.languageRequirement.level}`
+  const req = posting.languageRequirement;
+  const language = req
+    ? req.items
+        .map((item) => `${item.language} ${item.level}`)
+        .join(req.mode === "any" ? " or " : " & ")
     : null;
   return [posting.location, posting.workMode, language, posting.salary]
     .filter(Boolean)

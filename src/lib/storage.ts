@@ -31,14 +31,33 @@ function readJson(key: string, storage: StorageLike | null): unknown {
   }
 }
 
-/** Records saved before the timeline existed get a derived first event. */
-function normalizeApplication(application: SavedApplication): SavedApplication {
-  if (Array.isArray(application.history) && application.history.length > 0) {
-    return application;
-  }
+/** Pre-connective snapshots stored `{language, level}` — wrap as a single-item "all" (docs/DECISIONS.md #14). */
+function normalizeLanguageRequirement(
+  application: SavedApplication,
+): SavedApplication {
+  const raw = application.posting?.languageRequirement as unknown;
+  if (!raw || typeof raw !== "object" || "items" in raw) return application;
   return {
     ...application,
-    history: [{ status: application.status, at: application.createdAt }],
+    posting: {
+      ...application.posting,
+      languageRequirement: {
+        mode: "all",
+        items: [raw as { language: string; level: never }],
+      },
+    },
+  };
+}
+
+/** Records saved before the timeline existed get a derived first event. */
+function normalizeApplication(application: SavedApplication): SavedApplication {
+  const migrated = normalizeLanguageRequirement(application);
+  if (Array.isArray(migrated.history) && migrated.history.length > 0) {
+    return migrated;
+  }
+  return {
+    ...migrated,
+    history: [{ status: migrated.status, at: migrated.createdAt }],
   };
 }
 
